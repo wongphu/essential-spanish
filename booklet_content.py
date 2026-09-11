@@ -345,8 +345,8 @@ add({
         {"type": "p", "text": (
             "Location is always <es>estar</es>, even if the place never moves: "
             "<es>Panamá está en Centroamérica.</es> Feelings, health, and “how is it "
-            "right now?” are <es>estar</es> too. That last group is the one English "
-            "speakers keep handing to <es>ser</es> by accident."
+            "right now?” are <es>estar</es> too. That last group is where English "
+            "speakers keep using <es>ser</es> by accident."
         )},
         {"type": "pairs", "items": [
             ["Estoy en David. / Estamos en la capital.", "I'm in David. / We're in Panama City."],
@@ -361,7 +361,7 @@ add({
             "A wrong <es>el</es> or <es>la</es> rarely blocks meaning. Picking the wrong "
             "“to be” often does. <es>Soy enfermo</es> sounds like “I am a sick person by nature.” "
             "<es>Estoy enfermo</es> is “I'm sick (right now).” "
-            "<es>Soy jubilado</es> is your identity. Location, mood, open/closed: <es>estar</es>."
+            "<es>Soy jubilado</es> is your identity."
         )},
         {"type": "table", "headers": ["ser", "estar"], "col_widths": [1, 1], "rows": [
             ["soy", "estoy"],
@@ -416,13 +416,21 @@ add({
             ["nosotros", "hablamos"],
             ["ustedes / ellos / ellas", "hablan"],
         ]},
-        {"type": "h2", "text": "comer — to eat  ·  vivir — to live"},
-        {"type": "table", "headers": ["Person", "comer", "vivir"], "rows": [
-            ["yo", "como", "vivo"],
-            ["tú", "comes", "vives"],
-            ["usted / él / ella", "come", "vive"],
-            ["nosotros", "comemos", "vivimos"],
-            ["ustedes / ellos", "comen", "viven"],
+        {"type": "h2", "text": "comer — to eat"},
+        {"type": "table", "headers": ["Person", "Form"], "rows": [
+            ["yo", "como"],
+            ["tú", "comes"],
+            ["usted / él / ella", "come"],
+            ["nosotros", "comemos"],
+            ["ustedes / ellos / ellas", "comen"],
+        ]},
+        {"type": "h2", "text": "vivir — to live"},
+        {"type": "table", "headers": ["Person", "Form"], "rows": [
+            ["yo", "vivo"],
+            ["tú", "vives"],
+            ["usted / él / ella", "vive"],
+            ["nosotros", "vivimos"],
+            ["ustedes / ellos / ellas", "viven"],
         ]},
         {"type": "pairs", "items": [
             ["Hablo un poco de español.", "I speak a little Spanish."],
