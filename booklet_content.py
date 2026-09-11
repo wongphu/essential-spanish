@@ -50,8 +50,7 @@ add({
             "“to be” (especially <es>estar</es>), two past tenses, and little words like "
             "<es>lo</es> and <es>la</es>. Mixing up <es>ser</es> and <es>estar</es>, or "
             "using the wrong past, is what most often confuses a listener. A wrong "
-            "<es>el</es> or <es>la</es> almost never does. And you can skip the "
-            "subjunctive for a long time. Textbooks love it. Real life will wait."
+            "<es>el</es> or <es>la</es> almost never does."
         )},
         {"type": "p", "text": (
             "Mistakes are allowed. Panamanians deal with visitors from everywhere, "
@@ -177,6 +176,22 @@ add({
             "Words ending in <es>-ción, -sión, -dad, -tad</es> are feminine: <es>la dirección, la ciudad</es>.",
             "When in doubt, English speakers default to masculine. The slips that last are almost always on feminine words. Learn <es>la</es> with those nouns and you cut the problem in half.",
         ]},
+        {"type": "h2", "text": "Professions: el and la tell you who"},
+        {"type": "p", "text": (
+            "Some job words don't change at all. The little word in front is the gender: "
+            "<es>el</es> for a man, <es>la</es> for a woman. This is the usual pattern for "
+            "words ending in <es>-ista</es>."
+        )},
+        {"type": "pairs", "items": [
+            ["el dentista / la dentista", "the dentist (a man / a woman)"],
+            ["el recepcionista / la recepcionista", "the receptionist"],
+            ["el especialista / la especialista", "the specialist"],
+        ]},
+        {"type": "p", "text": (
+            "Other jobs do change the ending: <es>el médico / la médica</es>, "
+            "<es>el vecino / la vecina</es>. Either way, listen for <es>el</es> or "
+            "<es>la</es> — that is who they are."
+        )},
         {"type": "h2", "text": "Learn these with the article"},
         {"type": "p", "text": (
             "These are the ones that do not follow the -o / -a hint. Photograph this list."
