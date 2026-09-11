@@ -12,10 +12,11 @@ import re
 import subprocess
 import urllib.error
 import urllib.request
+from io import BytesIO
 from xml.sax.saxutils import escape as xml_escape
 
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT
+from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
@@ -24,6 +25,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
     BaseDocTemplate,
     CondPageBreak,
+    Flowable,
     Frame,
     KeepTogether,
     ListFlowable,
@@ -54,6 +56,8 @@ OMLX_SETTINGS = os.path.expanduser("~/.omlx/settings.json")
 
 # id -> spoken Spanish, filled while building HTML
 UTTERANCES = {}
+# section id -> PDF page, filled on the first layout pass
+SECTION_PAGES = {}
 
 TEAL = colors.HexColor("#0C5F5F")
 TEAL_DARK = colors.HexColor("#084848")
@@ -127,6 +131,16 @@ def make_styles():
             spaceAfter=6,
             keepWithNext=True,
         ),
+        "h2_compact": ParagraphStyle(
+            "h2_compact",
+            fontName="Georgia-Bold",
+            fontSize=12.5,
+            leading=16,
+            textColor=TEAL,
+            spaceBefore=6,
+            spaceAfter=3,
+            keepWithNext=True,
+        ),
         "intro": ParagraphStyle(
             "intro",
             fontName="Georgia-Italic",
@@ -157,22 +171,36 @@ def make_styles():
         "cell": ParagraphStyle(
             "cell",
             fontName="Georgia",
-            fontSize=9.5,
-            leading=13,
+            fontSize=10.5,
+            leading=14.5,
             textColor=INK,
         ),
         "cell_es": ParagraphStyle(
             "cell_es",
             fontName="Georgia-Bold",
-            fontSize=9.5,
-            leading=13,
+            fontSize=10.5,
+            leading=14.5,
             textColor=TEAL_DARK,
         ),
         "cell_head": ParagraphStyle(
             "cell_head",
             fontName="Verdana-Bold",
-            fontSize=8,
-            leading=11,
+            fontSize=8.5,
+            leading=12,
+            textColor=TEAL_DARK,
+        ),
+        "cell_compact": ParagraphStyle(
+            "cell_compact",
+            fontName="Georgia",
+            fontSize=9.5,
+            leading=12.5,
+            textColor=INK,
+        ),
+        "cell_es_compact": ParagraphStyle(
+            "cell_es_compact",
+            fontName="Georgia-Bold",
+            fontSize=9.5,
+            leading=12.5,
             textColor=TEAL_DARK,
         ),
         "tip_title": ParagraphStyle(
@@ -209,16 +237,24 @@ def make_styles():
         "pair_es": ParagraphStyle(
             "pair_es",
             fontName="Georgia-Bold",
-            fontSize=11,
-            leading=15,
+            fontSize=12,
+            leading=16,
             textColor=TEAL_DARK,
         ),
         "pair_en": ParagraphStyle(
             "pair_en",
             fontName="Georgia-Italic",
-            fontSize=11,
-            leading=15,
+            fontSize=11.5,
+            leading=16,
             textColor=INK_SOFT,
+        ),
+        "toc_page": ParagraphStyle(
+            "toc_page",
+            fontName="Verdana",
+            fontSize=10,
+            leading=14,
+            textColor=TEAL_DARK,
+            alignment=TA_RIGHT,
         ),
         "note": ParagraphStyle(
             "note",
@@ -305,7 +341,7 @@ def register_utterance(raw: str, always: bool = False, skip_digits: bool = False
 
 
 SPEAKER_SVG = (
-    '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">'
+    '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">'
     '<path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3z"/>'
     '<path fill="currentColor" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>'
     '<path fill="currentColor" d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>'
@@ -323,9 +359,78 @@ def play_wrap(raw: str, inner_html: str, always: bool = False, skip_digits: bool
     return (
         f'<span class="say">'
         f'<button type="button" class="play" data-id="{uid}" data-say="{say}" '
-        f'aria-label="{label}" title="{label}">{SPEAKER_SVG}</button>'
+        f'aria-label="{label}" title="{label}" aria-pressed="false">{SPEAKER_SVG}</button>'
         f"{inner_html}</span>"
     )
+
+
+def split_spoken_alts(raw: str) -> list[str]:
+    """Split 'hola / adiós' into two clips; ignore slashes inside parentheses."""
+    parts = []
+    buf = []
+    depth = 0
+    i = 0
+    s = raw or ""
+    while i < len(s):
+        ch = s[i]
+        if ch == "(":
+            depth += 1
+            buf.append(ch)
+            i += 1
+        elif ch == ")":
+            depth = max(0, depth - 1)
+            buf.append(ch)
+            i += 1
+        elif depth == 0 and s.startswith(" / ", i):
+            part = "".join(buf).strip()
+            if part:
+                parts.append(part)
+            buf = []
+            i += 3
+        else:
+            buf.append(ch)
+            i += 1
+    part = "".join(buf).strip()
+    if part:
+        parts.append(part)
+    if len(parts) > 1:
+        raw_s = (raw or "").strip()
+        # Keep a single question with internal alternatives as one clip:
+        # "¿Tiene algo para el dolor / el resfriado / la alergia?"
+        if raw_s.count("¿") == 1 and raw_s.endswith("?") and any(not p.endswith("?") for p in parts[:-1]):
+            return [raw_s]
+    return parts
+
+
+def play_segments(raw: str, always: bool = False, skip_digits: bool = False) -> str:
+    parts = split_spoken_alts(raw)
+    if len(parts) <= 1:
+        return play_wrap(raw, rich_to_html(raw), always=always, skip_digits=skip_digits)
+    bits = []
+    for i, part in enumerate(parts):
+        bits.append(play_wrap(part, rich_to_html(part), always=always, skip_digits=skip_digits))
+        if i < len(parts) - 1:
+            bits.append('<span class="slash"> / </span>')
+    return '<span class="say-group">' + "".join(bits) + "</span>"
+
+
+def resolve_audio_cols(block) -> set:
+    headers = block.get("headers") or block.get("columns") or []
+    rows = block.get("rows") or []
+    n = len(headers) if headers else (len(rows[0]) if rows else 0)
+    if "audio_cols" in block:
+        return {int(i) for i in block["audio_cols"] if 0 <= int(i) < n}
+    emphasis = block.get("emphasis", "first")
+    if emphasis == "all":
+        return set(range(n))
+    if emphasis == "two-es":
+        return {i for i in (0, 1) if i < n}
+    if emphasis == "none":
+        return set()
+    first = headers[0] if headers else "Spanish"
+    if first in ("Person", "", "Letter", "If it ends in…", "If English can say…"):
+        return set()
+    return {0} if n else set()
 
 
 def rich_to_html(text: str) -> str:
@@ -373,44 +478,55 @@ def stacked_paragraphs(items, styles):
     return flow
 
 
-def cell_style_for(headers, col_index, styles, emphasis):
+def cell_style_for(headers, col_index, styles, emphasis, audio_cols=None, compact=False):
+    es = styles["cell_es_compact"] if compact else styles["cell_es"]
+    body = styles["cell_compact"] if compact else styles["cell"]
+    if audio_cols is not None:
+        return es if col_index in audio_cols else body
     if emphasis == "all":
-        return styles["cell_es"]
+        return es
     if emphasis == "two-es":
-        return styles["cell_es"] if col_index < 2 else styles["cell"]
+        return es if col_index < 2 else body
     if emphasis == "none":
-        return styles["cell"]
+        return body
     first = headers[0] if headers else "Spanish"
-    # Label in column 0, Spanish in the rest
     if first in ("Person", ""):
-        return styles["cell"] if col_index == 0 else styles["cell_es"]
-    # Mixed explainers: first column is the Spanish cue
+        return body if col_index == 0 else es
     if first in ("Use", "Start with", "Pattern", "When"):
-        return styles["cell_es"] if col_index == 0 else styles["cell"]
-    # Default Spanish-English tables
+        return es if col_index == 0 else body
     if col_index == 0:
-        return styles["cell_es"]
-    return styles["cell"]
+        return es
+    return body
 
 
-def make_grid(headers, rows, styles, width, emphasis="first", hide_header=False):
+def make_grid(headers, rows, styles, width, emphasis="first", hide_header=False, audio_cols=None, compact=False):
     n = len(headers) if headers else (len(rows[0]) if rows else 1)
     if n == 0:
         return Spacer(1, 1)
+    first = headers[0] if headers else ""
+    audio_set = set(audio_cols) if audio_cols is not None else None
     if n == 2:
-        weights = [0.48, 0.52]
+        if first in ("Person", "Letter"):
+            weights = [0.28, 0.72]
+        else:
+            weights = [0.48, 0.52]
     elif n == 3:
         if emphasis == "two-es":
             weights = [0.32, 0.32, 0.36]
         else:
             weights = [0.34, 0.28, 0.38]
     elif n == 4:
-        weights = [0.25, 0.25, 0.25, 0.25]
+        if audio_set == {0, 2}:
+            weights = [0.28, 0.22, 0.28, 0.22]
+        else:
+            weights = [0.25, 0.25, 0.25, 0.25]
     elif n == 5:
         weights = [0.24, 0.19, 0.19, 0.19, 0.19]
     else:
         weights = [1 / n] * n
     col_w = [width * w for w in weights]
+    pad_x = 5 if compact else 7
+    pad_y = 3 if compact else 5
 
     data = []
     if headers and not hide_header:
@@ -419,7 +535,7 @@ def make_grid(headers, rows, styles, width, emphasis="first", hide_header=False)
         cells = []
         for i in range(n):
             val = row[i] if i < len(row) else ""
-            style = cell_style_for(headers, i, styles, emphasis)
+            style = cell_style_for(headers, i, styles, emphasis, audio_cols=audio_set, compact=compact)
             cells.append(Paragraph(rich_to_rl(str(val)), style))
         data.append(cells)
 
@@ -427,10 +543,10 @@ def make_grid(headers, rows, styles, width, emphasis="first", hide_header=False)
     t = Table(data, colWidths=col_w, repeatRows=repeat)
     style_cmds = [
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 7),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 7),
-        ("TOPPADDING", (0, 0), (-1, -1), 5),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LEFTPADDING", (0, 0), (-1, -1), pad_x),
+        ("RIGHTPADDING", (0, 0), (-1, -1), pad_x),
+        ("TOPPADDING", (0, 0), (-1, -1), pad_y),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), pad_y),
         ("GRID", (0, 0), (-1, -1), 0.3, RULE),
         ("ALIGN", (0, 0), (-1, 0), "LEFT"),
     ]
@@ -479,13 +595,13 @@ def pair_table(items, styles, width):
     return t
 
 
-def render_block_pdf(block, styles, width):
+def render_block_pdf(block, styles, width, compact=False):
     btype = block["type"]
     bits = []
     if btype == "p":
         bits.append(Paragraph(rich_to_rl(block["text"]), styles["body"]))
     elif btype == "h2":
-        bits.append(Paragraph(rich_to_rl(block["text"]), styles["h2"]))
+        bits.append(Paragraph(rich_to_rl(block["text"]), styles["h2_compact"] if compact else styles["h2"]))
     elif btype == "tip":
         inner = [
             Paragraph(xml_escape(block["title"]), styles["tip_title"]),
@@ -552,17 +668,28 @@ def render_block_pdf(block, styles, width):
                 width,
                 emphasis=block.get("emphasis", "first"),
                 hide_header=block.get("hide_header", False),
+                audio_cols=resolve_audio_cols(block),
+                compact=compact,
             )
         )
-        bits.append(Spacer(1, 10))
+        bits.append(Spacer(1, 6 if compact else 10))
     elif btype == "pairs":
         if block.get("title"):
             bits.append(Paragraph(xml_escape(block["title"]), styles["h2"]))
         bits.append(pair_table(block["items"], styles, width))
-        bits.append(Spacer(1, 10))
+        bits.append(Spacer(1, 6 if compact else 10))
     elif btype == "phrases":
-        bits.append(make_grid(block["columns"], block["rows"], styles, width))
-        bits.append(Spacer(1, 10))
+        bits.append(
+            make_grid(
+                block["columns"],
+                block["rows"],
+                styles,
+                width,
+                audio_cols=resolve_audio_cols(block),
+                compact=compact,
+            )
+        )
+        bits.append(Spacer(1, 6 if compact else 10))
     elif btype == "note":
         note_text = rich_to_rl(block["text"].replace("\n\n", "<br/><br/>").replace("\n", "<br/>"))
         inner = [Paragraph(note_text, styles["note"])]
@@ -646,6 +773,11 @@ def draw_cover(canvas, doc):
     canvas.setFillColor(TEAL)
     canvas.setFont("Verdana", 8)
     canvas.drawCentredString(w / 2, 0.78 * inch, "Keep it close. Use what you need. Nobody is giving you a quiz.")
+    canvas.bookmarkPage("cover")
+    try:
+        canvas.addOutlineEntry("Cover", "cover", level=0, closed=False)
+    except ValueError:
+        pass
     canvas.restoreState()
 
 
@@ -680,7 +812,60 @@ def draw_toc_page(canvas, doc):
     draw_body_page(canvas, doc)
 
 
+class SectionMarker(Flowable):
+    """Zero-size marker: PDF page number, bookmark, and outline entry."""
+
+    def __init__(self, sid, title):
+        Flowable.__init__(self)
+        self.sid = sid
+        self.title = title
+
+    def wrap(self, availWidth, availHeight):
+        return (0, 0)
+
+    def draw(self):
+        canv = self.canv
+        SECTION_PAGES[self.sid] = canv.getPageNumber()
+        canv.bookmarkPage(self.sid)
+        try:
+            canv.addOutlineEntry(self.title, self.sid, level=0, closed=False)
+        except ValueError:
+            pass
+
+
+FOLLOW_H2 = {"table", "pairs", "phrases"}
+KEEP_TYPES = {"table", "pairs", "phrases", "tip", "panama", "callout", "note"}
+
+
+def group_pdf_blocks(blocks):
+    groups = []
+    i = 0
+    n = len(blocks)
+    while i < n:
+        b = blocks[i]
+        if b["type"] == "h2":
+            group = [b]
+            j = i + 1
+            if j < n and blocks[j]["type"] == "p":
+                group.append(blocks[j])
+                j += 1
+            if j < n and blocks[j]["type"] in FOLLOW_H2:
+                group.append(blocks[j])
+                groups.append(group)
+                i = j + 1
+                continue
+        groups.append([b])
+        i += 1
+    return groups
+
+
 def build_pdf():
+    SECTION_PAGES.clear()
+    _write_pdf(BytesIO())
+    return _write_pdf(PDF_PATH)
+
+
+def _write_pdf(dest):
     register_fonts()
     styles = make_styles()
     margin_l = 0.7 * inch
@@ -690,7 +875,7 @@ def build_pdf():
     width = letter[0] - margin_l - margin_r
 
     doc = BaseDocTemplate(
-        PDF_PATH,
+        dest,
         pagesize=letter,
         leftMargin=margin_l,
         rightMargin=margin_r,
@@ -712,6 +897,7 @@ def build_pdf():
     story = [NextPageTemplate("body"), PageBreak()]
 
     # TOC
+    story.append(SectionMarker("contents", "Contents"))
     story.append(Paragraph("CONTENTS", styles["kicker"]))
     story.append(Paragraph("What's inside", styles["h1"]))
     story.append(
@@ -721,23 +907,28 @@ def build_pdf():
         )
     )
     toc_rows = []
-    for i, sec in enumerate(SECTIONS):
+    page_col = 0.5 * inch
+    for sec in SECTIONS:
+        page_no = SECTION_PAGES.get(sec["id"])
         toc_rows.append(
             [
                 Paragraph(xml_escape(sec["kicker"]), styles["toc_kicker"]),
                 Paragraph(xml_escape(sec["title"]), styles["toc_item"]),
+                Paragraph(str(page_no) if page_no else "00", styles["toc_page"]),
             ]
         )
-    toc = Table(toc_rows, colWidths=[1.55 * inch, width - 1.55 * inch])
+    toc = Table(toc_rows, colWidths=[1.55 * inch, width - 1.55 * inch - page_col, page_col])
     toc.setStyle(
         TableStyle(
             [
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("LEFTPADDING", (0, 0), (-1, -1), 4),
                 ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (2, 0), (2, -1), 2),
                 ("TOPPADDING", (0, 0), (-1, -1), 5),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
                 ("LINEBELOW", (0, 0), (-1, -2), 0.3, RULE),
+                ("ALIGN", (2, 0), (2, -1), "RIGHT"),
             ]
         )
     )
@@ -745,6 +936,7 @@ def build_pdf():
     story.append(PageBreak())
 
     for sec in SECTIONS:
+        compact = bool(sec.get("compact"))
         if sec.get("newpage"):
             story.append(PageBreak())
         header = [
@@ -753,23 +945,28 @@ def build_pdf():
         ]
         if sec.get("intro"):
             header.append(Paragraph(rich_to_rl(sec["intro"]), styles["intro"]))
-        blocks = list(sec["blocks"])
-        first = []
-        rest = []
-        # keep heading with the first block
-        if blocks:
-            first = render_block_pdf(blocks[0], styles, width)
-            rest_blocks = blocks[1:]
-        else:
-            rest_blocks = []
+        groups = group_pdf_blocks(list(sec["blocks"]))
         story.append(CondPageBreak(2.2 * inch))
-        story.append(KeepTogether(header + first))
-        for block in rest_blocks:
-            story.extend(render_block_pdf(block, styles, width))
-        story.append(Spacer(1, 8))
+        first_flow = []
+        rest_groups = groups
+        if groups:
+            for block in groups[0]:
+                first_flow.extend(render_block_pdf(block, styles, width, compact=compact))
+            rest_groups = groups[1:]
+        story.append(KeepTogether([SectionMarker(sec["id"], sec["title"])] + header + first_flow))
+        for group in rest_groups:
+            flow = []
+            for block in group:
+                flow.extend(render_block_pdf(block, styles, width, compact=compact))
+            keep = len(group) > 1 or group[0]["type"] in KEEP_TYPES
+            if keep:
+                story.append(KeepTogether(flow))
+            else:
+                story.extend(flow)
+        story.append(Spacer(1, 4 if compact else 8))
 
     doc.build(story)
-    return PDF_PATH
+    return dest if isinstance(dest, str) else None
 
 
 # ---------------------------------------------------------------------------
@@ -932,7 +1129,8 @@ nav.toc a {
   font-size: 0.92rem;
   line-height: 1.3;
 }
-nav.toc a:hover { background: var(--header-bg); }
+nav.toc a:hover, nav.toc a.current { background: var(--header-bg); }
+nav.toc a.current { font-weight: 700; }
 nav.toc .k {
   display: block;
   font-family: Verdana, Geneva, sans-serif;
@@ -989,11 +1187,27 @@ span[lang="es"], td[lang="es"], .es {
   margin: 0 0 1.15rem;
   font-size: 1.05rem;
 }
+.audio-hint code {
+  font-family: Verdana, Geneva, sans-serif;
+  font-size: 0.9em;
+}
 .say {
   display: inline-flex;
   align-items: flex-start;
   gap: 0.45rem;
   max-width: 100%;
+}
+.say-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.35rem 0.2rem;
+  max-width: 100%;
+}
+.slash {
+  color: var(--ink-soft);
+  font-weight: 400;
+  padding: 0.55rem 0.05rem 0;
 }
 button.play {
   flex: 0 0 auto;
@@ -1065,7 +1279,7 @@ table.data td {
   border: 1px solid var(--rule);
   vertical-align: top;
 }
-table.data td:first-child { color: var(--teal-dark); font-weight: 700; }
+table.data td[lang="es"] { color: var(--teal-dark); font-weight: 700; }
 table.data.plain td:first-child { font-weight: 400; color: var(--ink); }
 table.data.es-all td { color: var(--teal-dark); font-weight: 700; }
 table.data.two-es td:nth-child(1),
@@ -1122,7 +1336,8 @@ footer.site {
   nav.toc { display: none; }
   .layout { display: block; max-width: none; }
   .hero { break-after: page; }
-  section.chapter { box-shadow: none; break-inside: avoid; }
+  section.chapter { box-shadow: none; break-inside: auto; }
+  h2.chapter-title, h3 { break-after: avoid; }
   body { background: white; }
 }
 """
@@ -1130,15 +1345,18 @@ footer.site {
 JS = r"""
 (function () {
   const root = document.documentElement;
-  const key = "es-grammar-type";
-  let size = parseInt(localStorage.getItem(key) || "18", 10);
+  const key = "es-booklet-type";
+  const legacy = localStorage.getItem("es-grammar-type");
+  let size = parseInt(localStorage.getItem(key) || legacy || "18", 10);
+  if (isNaN(size)) size = 18;
+  size = Math.max(18, Math.min(26, size));
   function apply() {
     root.style.fontSize = size + "px";
     localStorage.setItem(key, String(size));
   }
   apply();
   document.getElementById("type-down").addEventListener("click", function () {
-    size = Math.max(16, size - 1);
+    size = Math.max(18, size - 1);
     apply();
   });
   document.getElementById("type-up").addEventListener("click", function () {
@@ -1208,6 +1426,28 @@ JS = r"""
     }
   });
   if (window.speechSynthesis) speechSynthesis.getVoices();
+
+  const tocLinks = document.querySelectorAll("nav.toc a");
+  const chapters = document.querySelectorAll("section.chapter");
+  if (tocLinks.length && chapters.length && "IntersectionObserver" in window) {
+    const byId = {};
+    tocLinks.forEach(function (a) {
+      const id = (a.getAttribute("href") || "").replace("#", "");
+      if (id) byId[id] = a;
+    });
+    let currentId = null;
+    const io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        const id = entry.target.id;
+        if (!id || !byId[id]) return;
+        if (currentId && byId[currentId]) byId[currentId].classList.remove("current");
+        currentId = id;
+        byId[id].classList.add("current");
+      });
+    }, { rootMargin: "-18% 0px -70% 0px", threshold: 0.02 });
+    chapters.forEach(function (sec) { io.observe(sec); });
+  }
 })();
 """
 
@@ -1225,11 +1465,15 @@ def toc_html():
     return "<ol>\n" + "\n".join(items) + "\n</ol>"
 
 
-def table_html(headers, rows, plain_first=False, hide_header=False, extra_cls="", es_cols=1, skip_digits=False):
+def table_html(headers, rows, plain_first=False, hide_header=False, extra_cls="", es_cols=1, skip_digits=False, audio_cols=None):
     cls = "data plain" if plain_first else "data"
     if extra_cls:
         cls = f"{cls} {extra_cls}"
     n = len(headers) if headers else (len(rows[0]) if rows else 0)
+    if audio_cols is not None:
+        es_set = set(audio_cols)
+    else:
+        es_set = set(range(es_cols))
     thead = ""
     if headers and not hide_header:
         thead = "<thead><tr>" + "".join(f"<th>{rich_to_html(h) if h else ''}</th>" for h in headers) + "</tr></thead>"
@@ -1238,10 +1482,11 @@ def table_html(headers, rows, plain_first=False, hide_header=False, extra_cls=""
         tds = []
         for i in range(n):
             val = row[i] if i < len(row) else ""
-            is_es = i < es_cols
-            inner = rich_to_html(str(val))
+            is_es = i in es_set
             if is_es and str(val).strip():
-                inner = play_wrap(str(val), inner, always=True, skip_digits=skip_digits)
+                inner = play_segments(str(val), always=True, skip_digits=skip_digits)
+            else:
+                inner = rich_to_html(str(val))
             lang = ' lang="es"' if is_es else ""
             tds.append(f"<td{lang}>{inner}</td>")
         body.append("<tr>" + "".join(tds) + "</tr>")
@@ -1251,7 +1496,7 @@ def table_html(headers, rows, plain_first=False, hide_header=False, extra_cls=""
 def pairs_html(items, skip_digits=False):
     rows = []
     for es, en in items:
-        inner = play_wrap(es, rich_to_html(es), always=True, skip_digits=skip_digits)
+        inner = play_segments(es, always=True, skip_digits=skip_digits)
         rows.append(
             f'<tr><td class="es" lang="es">{inner}</td>'
             f'<td class="en">{rich_to_html(en)}</td></tr>'
@@ -1268,11 +1513,12 @@ def phrases_html(columns, rows, skip_digits=False):
         for i, col in enumerate(columns):
             val = row[i] if i < len(row) else ""
             extra = ' class="sound"' if "sound" in col.lower() else ""
-            inner = rich_to_html(str(val))
             lang = ""
             if i == 0:
-                inner = play_wrap(str(val), inner, always=True, skip_digits=skip_digits)
+                inner = play_segments(str(val), always=True, skip_digits=skip_digits)
                 lang = ' lang="es"'
+            else:
+                inner = rich_to_html(str(val))
             tds.append(f"<td{lang}{extra}>{inner}</td>")
         body.append("<tr>" + "".join(tds) + "</tr>")
     return (
@@ -1316,23 +1562,16 @@ def block_html(block, skip_digits=False):
         headers = block["headers"]
         emphasis = block.get("emphasis", "first")
         extra_cls = "es-all" if emphasis == "all" else ("two-es" if emphasis == "two-es" else "")
-        plain = headers[0] in ("", "Person", "Letter", "If it ends in…") and emphasis != "all"
-        if emphasis == "all":
-            es_cols = len(headers)
-        elif emphasis == "two-es":
-            es_cols = 2
-        elif plain:
-            es_cols = 0
-        else:
-            es_cols = 1
+        audio_cols = resolve_audio_cols(block)
+        plain = 0 not in audio_cols
         return table_html(
             headers,
             block["rows"],
             plain_first=plain,
             hide_header=block.get("hide_header", False),
             extra_cls=extra_cls,
-            es_cols=es_cols,
             skip_digits=skip_digits,
+            audio_cols=audio_cols,
         )
     if btype == "pairs":
         title = f"<h3>{html_lib.escape(block['title'])}</h3>" if block.get("title") else ""
@@ -1376,8 +1615,8 @@ def build_html():
 <body>
 <a class="skip" href="#content">Skip to contents</a>
 <div class="toolbar" role="group" aria-label="Text size">
-  <button type="button" id="type-down" title="Smaller text">A−</button>
-  <button type="button" id="type-up" title="Larger text">A+</button>
+  <button type="button" id="type-down" title="Smaller text" aria-label="Smaller text">A−</button>
+  <button type="button" id="type-up" title="Larger text" aria-label="Larger text">A+</button>
 </div>
 <header class="hero">
   <div class="hero-inner">
@@ -1405,7 +1644,9 @@ def build_html():
       </details>
     </div>
     <p class="audio-hint">Tap the green speaker next to a Spanish sentence to hear how it sounds.
-    Tap it again to stop. Try it: {sample}</p>
+    Tap it again to stop. Keep the <code>audio</code> folder next to this HTML file.
+    Print version: <a href="essential-spanish.pdf">essential-spanish.pdf</a>.
+    Try it: {sample}</p>
     <main id="content">
       {''.join(chapters)}
     </main>

@@ -10,7 +10,7 @@ This is not a grammar exam. It is a short, large-type guide with Panama examples
 
 | Format | File | Notes |
 |---|---|---|
-| **Print / tablet** | [`essential-spanish.pdf`](essential-spanish.pdf) | Letter size, about 34 pages. |
+| **Print / tablet** | [`essential-spanish.pdf`](essential-spanish.pdf) | Letter size, about 37 pages. |
 | **Phone (with audio)** | [`index.html`](index.html) + [`audio/`](audio/) | Open the HTML in a browser. Keep the `audio` folder next to the HTML file. Speaker buttons play each Spanish line. |
 
 The web page has **A− / A+** type-size buttons and a jump-to-chapter menu. Audio is web-only (not in the PDF).
@@ -66,7 +66,7 @@ That regenerates:
 - For audio: **oMLX** running locally with **Qwen3-TTS-12Hz-1.7B-Base-8bit** (`omlx start`, default `http://127.0.0.1:8000`)
 - Optional: `ffmpeg` if oMLX returns WAV instead of MP3
 
-The first audio run takes several minutes (~386 clips). Later runs only build new hashes. Clip ids include the TTS model name, so switching models regenerates audio.
+The first audio run takes several minutes (~480 clips). Later runs only build new hashes. Clip ids include the TTS model name, so switching models regenerates audio.
 
 | Request | Where |
 |---|---|

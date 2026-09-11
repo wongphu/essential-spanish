@@ -500,12 +500,12 @@ add({
             ["¿Le gusta el pescado?", "Do you like fish? (usted)"],
             ["Nos gusta Panamá.", "We like Panama."],
         ]},
-        {"type": "table", "headers": ["To whom", "Word"], "rows": [
-            ["to me", "me"],
-            ["to you (tú)", "te"],
-            ["to you (usted) / to him / to her", "le"],
-            ["to us", "nos"],
-            ["to you all / to them", "les"],
+        {"type": "table", "headers": ["Word", "English"], "rows": [
+            ["me", "to me"],
+            ["te", "to you (tú)"],
+            ["le", "to you (usted) / to him / to her"],
+            ["nos", "to us"],
+            ["les", "to you all / to them"],
         ]},
         {"type": "p", "text": (
             "Want to make it extra clear? Add a phrase up front: "
@@ -1074,29 +1074,22 @@ add({
     "kicker": "Keep this page",
     "title": "Cheat sheets",
     "newpage": True,
+    "compact": True,
     "intro": "The whole booklet in a few little boxes. Take a photo of this page.",
     "blocks": [
         {"type": "h2", "text": "Ser vs. estar vs. hay"},
-        {"type": "table", "headers": ["Use", "When", "Example"], "rows": [
+        {"type": "table", "headers": ["Use", "When", "Example"], "audio_cols": [0, 2], "rows": [
             ["ser", "who / what / origin / time / job", "Soy jubilado. Es martes. Somos de Ohio."],
             ["estar", "where / how you feel / open-closed", "Estoy en David. Está cerrado. Estoy cansado."],
             ["hay", "there is / there are", "¿Hay un cajero cerca?"],
         ]},
         {"type": "h2", "text": "Two pasts"},
-        {"type": "table", "headers": ["If English can say…", "Use", "Example"], "rows": [
+        {"type": "table", "headers": ["If English can say…", "Use", "Example"], "audio_cols": [2], "rows": [
             ["I did it (and it finished)", "snapshot", "Ayer fui al médico. Comí pescado."],
             ["I used to / I was -ing", "background", "Cuando vivía en Florida… Hacía calor."],
         ]},
-        {"type": "h2", "text": "The present, one more time"},
-        {"type": "table", "headers": ["", "-ar (hablar)", "-er (comer)", "-ir (vivir)"], "rows": [
-            ["yo", "hablo", "como", "vivo"],
-            ["tú", "hablas", "comes", "vives"],
-            ["usted / él / ella", "habla", "come", "vive"],
-            ["nosotros", "hablamos", "comemos", "vivimos"],
-            ["ustedes / ellos", "hablan", "comen", "viven"],
-        ]},
         {"type": "h2", "text": "The sentence machines"},
-        {"type": "table", "headers": ["Start with", "Add", "You get"], "rows": [
+        {"type": "table", "headers": ["Start with", "Add", "You get"], "audio_cols": [0, 2], "rows": [
             ["Quiero…", "a noun or a verb", "Quiero agua. Quiero pagar."],
             ["Necesito…", "a noun or a verb", "Necesito ayuda. Necesito descansar."],
             ["¿Puede…?", "a verb", "¿Puede repetir? ¿Puede ayudarme?"],
@@ -1119,29 +1112,31 @@ add({
     "kicker": "Pocket page",
     "title": "If you only carry one page",
     "newpage": True,
+    "compact": True,
     "intro": (
         "Fold this. Keep it in your wallet. Point at a line if the words will not come."
     ),
     "blocks": [
-        {"type": "phrases", "columns": ["Spanish", "English"], "rows": [
-            ["Más despacio, por favor.", "A little slower, please."],
-            ["No hablo español muy bien.", "I don't speak Spanish very well."],
-            ["¿Me puede ayudar?", "Can you help me?"],
-            ["¿Cuánto cuesta?", "How much is it?"],
-            ["Quiero esto, por favor.", "I want this, please."],
-            ["¿Dónde está el baño?", "Where is the bathroom?"],
-            ["Tengo una cita.", "I have an appointment."],
-            ["Me duele aquí.", "It hurts here."],
-            ["Se fue la luz / el agua.", "The power / water went out."],
-            ["¿Puede repetir?", "Can you repeat that?"],
-            ["Gracias. / Por favor.", "Thank you. / Please."],
-            ["Que le vaya bien.", "Take care."],
+        {"type": "table", "headers": ["Spanish", "English", "Spanish", "English"],
+         "audio_cols": [0, 2], "rows": [
+            ["Más despacio, por favor.", "A little slower, please.",
+             "No hablo español muy bien.", "I don't speak Spanish well."],
+            ["¿Me puede ayudar?", "Can you help me?",
+             "¿Habla inglés?", "Do you speak English?"],
+            ["¿Cuánto cuesta?", "How much is it?",
+             "Quiero esto, por favor.", "I want this, please."],
+            ["¿Dónde está el baño?", "Where is the bathroom?",
+             "Tengo una cita.", "I have an appointment."],
+            ["Me duele aquí.", "It hurts here.",
+             "Se fue la luz / el agua.", "The power / water went out."],
+            ["¿Puede repetir?", "Can you repeat that?",
+             "Gracias. / Por favor.", "Thank you. / Please."],
+            ["Que le vaya bien.", "Take care.",
+             "Llame a una ambulancia.", "Call an ambulance."],
         ]},
         {"type": "tip", "title": "Ánimo. You've got this.", "text": (
-            "That is enough Spanish to have a life here. The rest is repetition, "
-            "curiosity, and the occasional cafecito with a patient neighbor. "
-            "Use <es>usted</es> with people you don't know well. "
-            "Close enough is plenty."
+            "911 works in Panama. Say <es>Llame al nueve once, por favor.</es> "
+            "Use <es>usted</es> with people you don't know well. Close enough is plenty."
         )},
     ],
 })

@@ -10,7 +10,7 @@ Kitchen-table booklet for **English-speaking retirees living in Panama**. Goal: 
 
 | Format | File | Use |
 |---|---|---|
-| **PDF (print)** | `essential-spanish.pdf` | Print or keep on a tablet. Letter size, ~34 pages. |
+| **PDF (print)** | `essential-spanish.pdf` | Print or keep on a tablet. Letter size, ~37 pages. |
 | **Web (phone)** | `index.html` + `audio/` | Open in a browser. Keep the `audio` folder **next to** the HTML file. Speaker buttons play each Spanish line. |
 
 Do **not** ship `essential-spanish-grammar.pdf` — that old filename was retired when the title dropped “Grammar.”
@@ -40,7 +40,7 @@ That regenerates:
 - For audio: **oMLX** with **Qwen3-TTS-12Hz-1.7B-Base-8bit** (`omlx start`; `http://127.0.0.1:8000/v1/audio/speech`)
 - Optional: `ffmpeg` if oMLX returns WAV instead of MP3
 
-First audio run takes a minute or two (~386 clips). Later runs only build new hashes.
+First audio run takes several minutes (~485 clips after slash-alternatives are split). Later runs only build new hashes.
 
 Edit **content** in `booklet_content.py`, then rebuild. Do not hand-edit `index.html` or the PDF; they are generated.
 
@@ -131,7 +131,7 @@ Spanish in running text uses `<es>...</es>` so it renders teal/bold in both HTML
 - `"emphasis": "all"` + `"hide_header": True` — number grid  
 
 **Audio (web only)**  
-Play buttons wrap Spanish cells in `pairs`, `phrases`, and Spanish table columns. Spoken text is cleaned (markup stripped, ` / ` → comma). Chapter 15 (`tts_skip_digits`) also drops Arabic numerals so `0 cero` is spoken as `cero`. Clip id = SHA-1 of `model|spoken`, first 12 hex chars. If an MP3 is missing, the page falls back to the browser’s Spanish voice.
+Play buttons wrap Spanish cells in `pairs`, `phrases`, and Spanish table columns. Alternatives split on ` / ` each get their own clip (`Buenos días.` / `Buenas tardes.`). A single question with internal slashes stays one clip. Chapter 15 (`tts_skip_digits`) drops Arabic numerals so `0 cero` is spoken as `cero`. Clip id = SHA-1 of `model|spoken`, first 12 hex chars. If an MP3 is missing, the page falls back to the browser’s Spanish voice.
 
 ---
 
