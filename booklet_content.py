@@ -247,11 +247,10 @@ add({
             ["las islas bonitas", "the pretty islands"],
             ["el banco está cerrado", "the bank is closed"],
         ]},
-        {"type": "p", "text": (
-            "If the adjective ends in <es>-o</es>, it changes: "
-            "<es>alto, alta, altos, altas</es>. If it ends in <es>-e</es> or a consonant, "
-            "you often only add <es>s</es> for plural: <es>grande</es> to <es>grandes</es>, <es>fácil</es> to <es>fáciles</es>."
-        )},
+        {"type": "ul", "items": [
+            "Ends in <es>-o</es>: <es>alto</es> (masculine), <es>alta</es> (feminine), <es>altos / altas</es> (plural).",
+            "Ends in <es>-e</es> or a consonant: same word for masculine and feminine. Only the plural changes: <es>grande / grandes</es>, <es>fácil / fáciles</es>.",
+        ]},
         {"type": "table", "headers": ["Spanish", "English"], "rows": [
             ["bueno / buena", "good"],
             ["malo / mala", "bad"],
