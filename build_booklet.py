@@ -46,12 +46,21 @@ HTML_PATH = os.path.join(ROOT, "index.html")
 PDF_PATH = os.path.join(ROOT, "essential-spanish.pdf")
 AUDIO_DIR = os.path.join(ROOT, "audio")
 # Local Qwen3-TTS via oMLX (OpenAI-compatible /v1/audio/speech).
+# CustomVoice (not Base) has named speakers. Aiden stays clearer in Spanish;
+# ryan often inserts laughs even with a no-laughter instruct.
 TTS_BASE_URL = os.environ.get("OMLX_BASE_URL", "http://127.0.0.1:8000")
-TTS_MODEL = os.environ.get("OMLX_TTS_MODEL", "Qwen3-TTS-12Hz-1.7B-Base-8bit")
+TTS_MODEL = os.environ.get("OMLX_TTS_MODEL", "Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit")
 TTS_LANGUAGE = os.environ.get("OMLX_TTS_LANGUAGE", "Spanish")
-TTS_VOICE = os.environ.get("OMLX_TTS_VOICE", "")
+TTS_VOICE = os.environ.get("OMLX_TTS_VOICE", "aiden")
 TTS_SPEED = float(os.environ.get("OMLX_TTS_SPEED", "1.0"))
 TTS_TIMEOUT = int(os.environ.get("OMLX_TTS_TIMEOUT", "120"))
+# Instruct + a cooler temperature keep the clips in a calm teacher register.
+TTS_INSTRUCT = os.environ.get(
+    "OMLX_TTS_INSTRUCT",
+    "Speak clearly and calmly, like a Spanish teacher. Neutral tone. "
+    "Do not laugh, giggle, chuckle, or add extra sounds.",
+)
+TTS_TEMPERATURE = float(os.environ.get("OMLX_TTS_TEMPERATURE", "0.7"))
 OMLX_SETTINGS = os.path.expanduser("~/.omlx/settings.json")
 
 # id -> spoken Spanish, filled while building HTML
@@ -325,7 +334,7 @@ def tts_text(raw: str, skip_digits: bool = False) -> str:
 
 
 def audio_id(spoken: str) -> str:
-    payload = f"{TTS_MODEL}|{spoken}"
+    payload = f"{TTS_MODEL}|{TTS_VOICE}|{TTS_INSTRUCT}|{TTS_TEMPERATURE}|{spoken}"
     return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:12]
 
 
@@ -1705,6 +1714,28 @@ def _looks_like_mp3(data: bytes, content_type: str) -> bool:
     return data[:3] == b"ID3" or data[:2] in (b"\xff\xf3", b"\xff\xfa", b"\xff\xfb", b"\xff\xf2")
 
 
+def _mp3_duration(path: str) -> float:
+    try:
+        out = subprocess.check_output(["afinfo", path], text=True)
+    except (OSError, subprocess.CalledProcessError):
+        return 0.0
+    for line in out.splitlines():
+        if "estimated duration" in line:
+            try:
+                return float(line.split()[-2])
+            except (IndexError, ValueError):
+                return 0.0
+    return 0.0
+
+
+def _short_clip_max_seconds(text: str) -> float:
+    """Tiny words sometimes come back as a 4–6s laugh; retry those."""
+    compact = re.sub(r"\s+", " ", text).strip(" .¡!¿?")
+    if len(compact) <= 6 and len(compact.split()) <= 2:
+        return 1.8
+    return 0.0
+
+
 def synthesize_omlx(text: str, dest_mp3: str) -> None:
     url = TTS_BASE_URL.rstrip("/") + "/v1/audio/speech"
     payload = {
@@ -1713,46 +1744,72 @@ def synthesize_omlx(text: str, dest_mp3: str) -> None:
         "language": TTS_LANGUAGE,
         "response_format": "mp3",
         "speed": TTS_SPEED,
+        "temperature": TTS_TEMPERATURE,
     }
     if TTS_VOICE:
         payload["voice"] = TTS_VOICE
+    if TTS_INSTRUCT:
+        payload["instructions"] = TTS_INSTRUCT
     body = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(url, data=body, headers=omlx_headers(), method="POST")
-    try:
-        with urllib.request.urlopen(req, timeout=TTS_TIMEOUT) as resp:
-            data = resp.read()
-            content_type = resp.headers.get("Content-Type", "")
-    except urllib.error.HTTPError as e:
-        detail = e.read().decode("utf-8", errors="replace")[:300]
-        raise RuntimeError(f"oMLX TTS HTTP {e.code}: {detail}") from e
-    if not data:
-        raise RuntimeError("oMLX TTS returned an empty body")
-    tmp = dest_mp3 + ".part"
-    if _looks_like_mp3(data, content_type):
-        with open(tmp, "wb") as f:
-            f.write(data)
-        os.replace(tmp, dest_mp3)
+    max_sec = _short_clip_max_seconds(text)
+    attempts = 4 if max_sec else 1
+    last_err = None
+    for attempt in range(1, attempts + 1):
+        req = urllib.request.Request(url, data=body, headers=omlx_headers(), method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=TTS_TIMEOUT) as resp:
+                data = resp.read()
+                content_type = resp.headers.get("Content-Type", "")
+        except urllib.error.HTTPError as e:
+            detail = e.read().decode("utf-8", errors="replace")[:300]
+            last_err = RuntimeError(f"oMLX TTS HTTP {e.code}: {detail}")
+            continue
+        if not data:
+            last_err = RuntimeError("oMLX TTS returned an empty body")
+            continue
+        tmp = dest_mp3 + ".part"
+        try:
+            if _looks_like_mp3(data, content_type):
+                with open(tmp, "wb") as f:
+                    f.write(data)
+                os.replace(tmp, dest_mp3)
+            else:
+                wav = dest_mp3 + ".wav"
+                with open(wav, "wb") as f:
+                    f.write(data)
+                try:
+                    subprocess.run(
+                        [
+                            "ffmpeg", "-y", "-loglevel", "error",
+                            "-i", wav,
+                            "-codec:a", "libmp3lame", "-q:a", "6",
+                            tmp,
+                        ],
+                        check=True,
+                        capture_output=True,
+                    )
+                    os.replace(tmp, dest_mp3)
+                finally:
+                    if os.path.exists(wav):
+                        os.remove(wav)
+                    if os.path.exists(tmp) and not os.path.exists(dest_mp3):
+                        os.remove(tmp)
+        except Exception as e:
+            last_err = e
+            continue
+        if max_sec:
+            dur = _mp3_duration(dest_mp3)
+            if dur > max_sec:
+                last_err = RuntimeError(
+                    f"short clip too long ({dur:.1f}s > {max_sec:.1f}s) for {text!r}"
+                )
+                if os.path.exists(dest_mp3):
+                    os.remove(dest_mp3)
+                continue
         return
-    wav = dest_mp3 + ".wav"
-    with open(wav, "wb") as f:
-        f.write(data)
-    try:
-        subprocess.run(
-            [
-                "ffmpeg", "-y", "-loglevel", "error",
-                "-i", wav,
-                "-codec:a", "libmp3lame", "-q:a", "6",
-                tmp,
-            ],
-            check=True,
-            capture_output=True,
-        )
-        os.replace(tmp, dest_mp3)
-    finally:
-        if os.path.exists(wav):
-            os.remove(wav)
-        if os.path.exists(tmp) and not os.path.exists(dest_mp3):
-            os.remove(tmp)
+    if last_err:
+        raise last_err
+    raise RuntimeError(f"oMLX TTS failed for {text!r}")
 
 
 def prune_unused_audio(keep_ids):
@@ -1805,7 +1862,8 @@ def build_audio():
     extra = f", pruned {pruned} old" if pruned else ""
     print(
         f"Audio: {made} new, {skipped} cached, {failed} failed, "
-        f"{len(UTTERANCES)} clips, model={TTS_MODEL}{extra}"
+        f"{len(UTTERANCES)} clips, model={TTS_MODEL}, voice={TTS_VOICE or '(none)'}, "
+        f"temp={TTS_TEMPERATURE}{extra}"
     )
     return made
 
