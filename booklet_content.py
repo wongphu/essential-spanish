@@ -809,6 +809,7 @@ add({
     "id": "numbers",
     "kicker": "Chapter 15",
     "title": "Numbers, money, and time",
+    "tts_skip_digits": True,
     "intro": (
         "This is the chapter you will use at the caja, the clinic window, and the "
         "taxi door. Panama uses U.S. dollars, so the only conversion is the words."

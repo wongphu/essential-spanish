@@ -6,9 +6,12 @@ from __future__ import annotations
 
 import hashlib
 import html as html_lib
+import json
 import os
 import re
 import subprocess
+import urllib.error
+import urllib.request
 from xml.sax.saxutils import escape as xml_escape
 
 from reportlab.lib import colors
@@ -40,9 +43,14 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(ROOT, "index.html")
 PDF_PATH = os.path.join(ROOT, "essential-spanish.pdf")
 AUDIO_DIR = os.path.join(ROOT, "audio")
-# Latin American Spanish, close to what you'll hear in Panama.
-TTS_VOICES = ("Eddy (Spanish (Mexico))", "Paulina")
-TTS_RATE = "155"
+# Local Qwen3-TTS via oMLX (OpenAI-compatible /v1/audio/speech).
+TTS_BASE_URL = os.environ.get("OMLX_BASE_URL", "http://127.0.0.1:8000")
+TTS_MODEL = os.environ.get("OMLX_TTS_MODEL", "Qwen3-TTS-12Hz-1.7B-Base-8bit")
+TTS_LANGUAGE = os.environ.get("OMLX_TTS_LANGUAGE", "Spanish")
+TTS_VOICE = os.environ.get("OMLX_TTS_VOICE", "")
+TTS_SPEED = float(os.environ.get("OMLX_TTS_SPEED", "1.0"))
+TTS_TIMEOUT = int(os.environ.get("OMLX_TTS_TIMEOUT", "120"))
+OMLX_SETTINGS = os.path.expanduser("~/.omlx/settings.json")
 
 # id -> spoken Spanish, filled while building HTML
 UTTERANCES = {}
@@ -262,7 +270,7 @@ def rich_to_rl(text: str) -> str:
     return out
 
 
-def tts_text(raw: str) -> str:
+def tts_text(raw: str, skip_digits: bool = False) -> str:
     """Plain Spanish for the speaker: strip markup, English asides, and slashes."""
     text = ES_TAG.sub(r"\1", raw or "")
     text = re.sub(r"<[^>]+>", "", text)
@@ -271,6 +279,9 @@ def tts_text(raw: str) -> str:
     text = re.sub(r"\([^)]*\)", " ", text)
     text = text.replace(" / ", ", ")
     text = text.replace("/", ", ")
+    if skip_digits:
+        # Chapter 15 number grid: speak "cero", not "0 cero".
+        text = re.sub(r"\d+(?:[.,]\d+)*", " ", text)
     text = re.sub(r"\s+", " ", text).strip(" ,")
     text = re.sub(r"\s+,", ",", text)
     text = re.sub(r",\s*,", ",", text)
@@ -278,11 +289,12 @@ def tts_text(raw: str) -> str:
 
 
 def audio_id(spoken: str) -> str:
-    return hashlib.sha1(spoken.encode("utf-8")).hexdigest()[:12]
+    payload = f"{TTS_MODEL}|{spoken}"
+    return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:12]
 
 
-def register_utterance(raw: str, always: bool = False):
-    spoken = tts_text(raw)
+def register_utterance(raw: str, always: bool = False, skip_digits: bool = False):
+    spoken = tts_text(raw, skip_digits=skip_digits)
     if not spoken or not any(c.isalpha() for c in spoken):
         return None
     if not always and not re.search(r"[\s/¿?¡!.,;]", spoken) and len(spoken) < 8:
@@ -301,8 +313,8 @@ SPEAKER_SVG = (
 )
 
 
-def play_wrap(raw: str, inner_html: str, always: bool = False) -> str:
-    info = register_utterance(raw, always=always)
+def play_wrap(raw: str, inner_html: str, always: bool = False, skip_digits: bool = False) -> str:
+    info = register_utterance(raw, always=always, skip_digits=skip_digits)
     if not info:
         return inner_html
     uid, spoken = info
@@ -1213,7 +1225,7 @@ def toc_html():
     return "<ol>\n" + "\n".join(items) + "\n</ol>"
 
 
-def table_html(headers, rows, plain_first=False, hide_header=False, extra_cls="", es_cols=1):
+def table_html(headers, rows, plain_first=False, hide_header=False, extra_cls="", es_cols=1, skip_digits=False):
     cls = "data plain" if plain_first else "data"
     if extra_cls:
         cls = f"{cls} {extra_cls}"
@@ -1229,17 +1241,17 @@ def table_html(headers, rows, plain_first=False, hide_header=False, extra_cls=""
             is_es = i < es_cols
             inner = rich_to_html(str(val))
             if is_es and str(val).strip():
-                inner = play_wrap(str(val), inner, always=True)
+                inner = play_wrap(str(val), inner, always=True, skip_digits=skip_digits)
             lang = ' lang="es"' if is_es else ""
             tds.append(f"<td{lang}>{inner}</td>")
         body.append("<tr>" + "".join(tds) + "</tr>")
     return f'<div style="overflow-x:auto"><table class="{cls}">{thead}<tbody>{"".join(body)}</tbody></table></div>'
 
 
-def pairs_html(items):
+def pairs_html(items, skip_digits=False):
     rows = []
     for es, en in items:
-        inner = play_wrap(es, rich_to_html(es), always=True)
+        inner = play_wrap(es, rich_to_html(es), always=True, skip_digits=skip_digits)
         rows.append(
             f'<tr><td class="es" lang="es">{inner}</td>'
             f'<td class="en">{rich_to_html(en)}</td></tr>'
@@ -1247,7 +1259,7 @@ def pairs_html(items):
     return '<table class="pairs">' + "".join(rows) + "</table>"
 
 
-def phrases_html(columns, rows):
+def phrases_html(columns, rows, skip_digits=False):
     # mark pronunciation column
     thead = "".join(f"<th>{html_lib.escape(h)}</th>" for h in columns)
     body = []
@@ -1259,7 +1271,7 @@ def phrases_html(columns, rows):
             inner = rich_to_html(str(val))
             lang = ""
             if i == 0:
-                inner = play_wrap(str(val), inner, always=True)
+                inner = play_wrap(str(val), inner, always=True, skip_digits=skip_digits)
                 lang = ' lang="es"'
             tds.append(f"<td{lang}{extra}>{inner}</td>")
         body.append("<tr>" + "".join(tds) + "</tr>")
@@ -1272,7 +1284,7 @@ def phrases_html(columns, rows):
     )
 
 
-def block_html(block):
+def block_html(block, skip_digits=False):
     btype = block["type"]
     if btype == "p":
         return f"<p>{rich_to_html(block['text'])}</p>"
@@ -1320,12 +1332,13 @@ def block_html(block):
             hide_header=block.get("hide_header", False),
             extra_cls=extra_cls,
             es_cols=es_cols,
+            skip_digits=skip_digits,
         )
     if btype == "pairs":
         title = f"<h3>{html_lib.escape(block['title'])}</h3>" if block.get("title") else ""
-        return title + pairs_html(block["items"])
+        return title + pairs_html(block["items"], skip_digits=skip_digits)
     if btype == "phrases":
-        return phrases_html(block["columns"], block["rows"])
+        return phrases_html(block["columns"], block["rows"], skip_digits=skip_digits)
     if btype == "note":
         return f'<pre class="note">{html_lib.escape(block["text"])}</pre>'
     return ""
@@ -1340,7 +1353,8 @@ def build_html():
     )
     chapters = []
     for sec in SECTIONS:
-        blocks = "\n".join(block_html(b) for b in sec["blocks"])
+        skip_digits = bool(sec.get("tts_skip_digits"))
+        blocks = "\n".join(block_html(b, skip_digits=skip_digits) for b in sec["blocks"])
         chapters.append(
             f'''<section class="chapter" id="{html_lib.escape(sec["id"])}">
 <p class="kicker">{html_lib.escape(sec["kicker"])}</p>
@@ -1410,62 +1424,148 @@ def build_html():
     return HTML_PATH
 
 
-def build_audio():
-    """Speak each unique Spanish line with a Latin American voice and save MP3s."""
-    os.makedirs(AUDIO_DIR, exist_ok=True)
-    voice = None
-    listed = subprocess.run(["say", "-v", "?"], capture_output=True, text=True).stdout
-    for candidate in TTS_VOICES:
-        if candidate in listed:
-            voice = candidate
-            break
-    if not voice:
-        print("No Spanish TTS voice found; web page will use the browser voice as a fallback.")
+def omlx_api_key() -> str:
+    key = os.environ.get("OMLX_API_KEY")
+    if key:
+        return key
+    try:
+        with open(OMLX_SETTINGS, encoding="utf-8") as f:
+            data = json.load(f)
+        return (data.get("auth") or {}).get("api_key") or ""
+    except (OSError, json.JSONDecodeError):
+        return ""
+
+
+def omlx_headers() -> dict:
+    headers = {"Content-Type": "application/json"}
+    key = omlx_api_key()
+    if key:
+        headers["Authorization"] = "Bearer " + key
+    return headers
+
+
+def ping_omlx() -> None:
+    url = TTS_BASE_URL.rstrip("/") + "/v1/models"
+    req = urllib.request.Request(url, headers=omlx_headers(), method="GET")
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        payload = json.loads(resp.read().decode("utf-8"))
+    ids = [m.get("id") for m in payload.get("data") or [] if m.get("id")]
+    if TTS_MODEL not in ids:
+        listed = ", ".join(ids) or "(none)"
+        raise RuntimeError(
+            f"oMLX is running but model {TTS_MODEL!r} is not available. Models: {listed}"
+        )
+
+
+def _looks_like_mp3(data: bytes, content_type: str) -> bool:
+    ctype = (content_type or "").lower()
+    if "mpeg" in ctype or "mp3" in ctype:
+        return True
+    return data[:3] == b"ID3" or data[:2] in (b"\xff\xf3", b"\xff\xfa", b"\xff\xfb", b"\xff\xf2")
+
+
+def synthesize_omlx(text: str, dest_mp3: str) -> None:
+    url = TTS_BASE_URL.rstrip("/") + "/v1/audio/speech"
+    payload = {
+        "model": TTS_MODEL,
+        "input": text,
+        "language": TTS_LANGUAGE,
+        "response_format": "mp3",
+        "speed": TTS_SPEED,
+    }
+    if TTS_VOICE:
+        payload["voice"] = TTS_VOICE
+    body = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(url, data=body, headers=omlx_headers(), method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=TTS_TIMEOUT) as resp:
+            data = resp.read()
+            content_type = resp.headers.get("Content-Type", "")
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", errors="replace")[:300]
+        raise RuntimeError(f"oMLX TTS HTTP {e.code}: {detail}") from e
+    if not data:
+        raise RuntimeError("oMLX TTS returned an empty body")
+    tmp = dest_mp3 + ".part"
+    if _looks_like_mp3(data, content_type):
+        with open(tmp, "wb") as f:
+            f.write(data)
+        os.replace(tmp, dest_mp3)
+        return
+    wav = dest_mp3 + ".wav"
+    with open(wav, "wb") as f:
+        f.write(data)
+    try:
+        subprocess.run(
+            [
+                "ffmpeg", "-y", "-loglevel", "error",
+                "-i", wav,
+                "-codec:a", "libmp3lame", "-q:a", "6",
+                tmp,
+            ],
+            check=True,
+            capture_output=True,
+        )
+        os.replace(tmp, dest_mp3)
+    finally:
+        if os.path.exists(wav):
+            os.remove(wav)
+        if os.path.exists(tmp) and not os.path.exists(dest_mp3):
+            os.remove(tmp)
+
+
+def prune_unused_audio(keep_ids):
+    if not os.path.isdir(AUDIO_DIR):
         return 0
+    removed = 0
+    keep = {uid + ".mp3" for uid in keep_ids}
+    for name in os.listdir(AUDIO_DIR):
+        if not name.endswith(".mp3") or name in keep:
+            continue
+        os.remove(os.path.join(AUDIO_DIR, name))
+        removed += 1
+    return removed
+
+
+def build_audio():
+    """Speak each unique Spanish line with local oMLX Qwen3-TTS and save MP3s."""
+    os.makedirs(AUDIO_DIR, exist_ok=True)
+    try:
+        ping_omlx()
+    except Exception as e:
+        print(f"oMLX TTS unavailable ({e}); web page will use the browser voice as a fallback.")
+        return 0
+
     made = 0
     skipped = 0
     failed = 0
+    items = sorted(UTTERANCES.items())
+    total = len(items)
 
-    def one(item):
-        uid, text = item
+    for i, (uid, text) in enumerate(items, 1):
         mp3 = os.path.join(AUDIO_DIR, uid + ".mp3")
         if os.path.exists(mp3) and os.path.getsize(mp3) > 400:
-            return "skip"
-        aiff = os.path.join("/tmp", "es-booklet-" + uid + ".aiff")
+            skipped += 1
+            continue
         try:
-            subprocess.run(
-                ["say", "-v", voice, "-r", TTS_RATE, "-o", aiff, text],
-                check=True,
-                capture_output=True,
-            )
-            subprocess.run(
-                [
-                    "ffmpeg", "-y", "-loglevel", "error",
-                    "-i", aiff,
-                    "-codec:a", "libmp3lame", "-q:a", "6",
-                    mp3,
-                ],
-                check=True,
-                capture_output=True,
-            )
-            return "made"
-        except subprocess.CalledProcessError:
-            print("TTS failed:", uid, text[:70])
-            return "fail"
-        finally:
-            if os.path.exists(aiff):
-                os.remove(aiff)
+            synthesize_omlx(text, mp3)
+            if not os.path.exists(mp3) or os.path.getsize(mp3) < 400:
+                raise RuntimeError("clip too small")
+            made += 1
+        except Exception as e:
+            print("TTS failed:", uid, text[:70], "—", e)
+            failed += 1
+            if os.path.exists(mp3) and os.path.getsize(mp3) < 400:
+                os.remove(mp3)
+        if i % 25 == 0 or i == total:
+            print(f"Audio progress: {i}/{total} ({made} new, {skipped} cached, {failed} failed)")
 
-    from concurrent.futures import ThreadPoolExecutor
-    with ThreadPoolExecutor(max_workers=3) as pool:
-        for result in pool.map(one, sorted(UTTERANCES.items())):
-            if result == "made":
-                made += 1
-            elif result == "skip":
-                skipped += 1
-            else:
-                failed += 1
-    print(f"Audio: {made} new, {skipped} cached, {failed} failed, {len(UTTERANCES)} clips, voice={voice}")
+    pruned = prune_unused_audio(UTTERANCES)
+    extra = f", pruned {pruned} old" if pruned else ""
+    print(
+        f"Audio: {made} new, {skipped} cached, {failed} failed, "
+        f"{len(UTTERANCES)} clips, model={TTS_MODEL}{extra}"
+    )
     return made
 
 

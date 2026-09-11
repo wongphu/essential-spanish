@@ -37,8 +37,8 @@ That regenerates:
 
 - Python 3.9+ with `reportlab` and `pypdf` (`python3 -m pip install --user reportlab pypdf`)
 - macOS fonts: Georgia + Verdana under `/System/Library/Fonts/Supplemental/`
-- For audio: `say` (built in) and `ffmpeg` (`brew install ffmpeg`)
-- Spanish voice: **Eddy (Spanish (Mexico))** preferred, **Paulina** as fallback (`say -v '?'`)
+- For audio: **oMLX** with **Qwen3-TTS-12Hz-1.7B-Base-8bit** (`omlx start`; `http://127.0.0.1:8000/v1/audio/speech`)
+- Optional: `ffmpeg` if oMLX returns WAV instead of MP3
 
 First audio run takes a minute or two (~386 clips). Later runs only build new hashes.
 
@@ -98,7 +98,8 @@ Drawn from SLA research on English speakers learning Spanish, plus a Peace Corps
 - **Subjunctive is skipped.** Textbooks love it; input is sparse; it is not needed for this audience.
 - **Personal *a*** is a high-frequency classroom miss; show it, don’t lecture.
 - **Pronouns** are hard in production; the booklet treats *lo/la/se lo* as *recognition first*.
-- Audio uses a **Mexican Spanish** system voice (closest clear Latin American voice on macOS). Panama coastal speech drops final *s*; the clips will sound “clearer than the taxi.”
+- Audio uses local **Qwen3-TTS** through oMLX (`Qwen3-TTS-12Hz-1.7B-Base-8bit`, language `Spanish`). Panama coastal speech drops final *s*; the clips will sound “clearer than the taxi.”
+- Chapter 15 number grid does **not** send Arabic digits (`0`, `1`, `1,000`, …) to TTS. Speaker buttons still play the Spanish word (`cero`, `mil`).
 
 Visual: cream paper, teal + coral + gold. Cover and running header say **Essential Spanish**, not “Grammar.” Web speaker icon is a cone + two sound waves in a **small** teal circle.
 
@@ -130,13 +131,13 @@ Spanish in running text uses `<es>...</es>` so it renders teal/bold in both HTML
 - `"emphasis": "all"` + `"hide_header": True` — number grid  
 
 **Audio (web only)**  
-Play buttons wrap Spanish cells in `pairs`, `phrases`, and Spanish table columns. Spoken text is cleaned (markup stripped, ` / ` → comma). Clip id = SHA-1 of that spoken string, first 12 hex chars. If an MP3 is missing, the page falls back to the browser’s Spanish voice.
+Play buttons wrap Spanish cells in `pairs`, `phrases`, and Spanish table columns. Spoken text is cleaned (markup stripped, ` / ` → comma). Chapter 15 (`tts_skip_digits`) also drops Arabic numerals so `0 cero` is spoken as `cero`. Clip id = SHA-1 of `model|spoken`, first 12 hex chars. If an MP3 is missing, the page falls back to the browser’s Spanish voice.
 
 ---
 
 ## What is not done
 
-- No Panamanian-accent TTS (no system voice for it)
+- No Panamanian-accent TTS (Qwen3-TTS Base has no named speakers; language is set to Spanish)
 - No audio in the PDF
 - No app store / hosting setup — `index.html` is opened locally or dropped on any static host **with** the `audio/` folder
 - No spaced-repetition drills or quizzes
@@ -150,7 +151,7 @@ Play buttons wrap Spanish cells in `pairs`, `phrases`, and Spanish table columns
 |---|---|
 | Change wording or add a phrase | `booklet_content.py`, then `python3 build_booklet.py` |
 | New Spanish line with audio | Same; new MP3s generate automatically |
-| Different TTS voice | `TTS_VOICES` / `TTS_RATE` in `build_booklet.py` |
+| Different TTS model / server | `OMLX_TTS_MODEL` / `OMLX_BASE_URL` (defaults in `build_booklet.py`) |
 | Force-rebuild all audio | Delete `audio/` and rebuild |
 | Host the web booklet | Upload `index.html` + `audio/` together; relative `audio/{id}.mp3` paths must stay |
 
