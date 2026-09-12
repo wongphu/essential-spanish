@@ -1364,14 +1364,14 @@ JS = r"""
   const legacy = localStorage.getItem("es-grammar-type");
   let size = parseInt(localStorage.getItem(key) || legacy || "18", 10);
   if (isNaN(size)) size = 18;
-  size = Math.max(18, Math.min(26, size));
+  size = Math.max(14, Math.min(26, size));
   function apply() {
     root.style.fontSize = size + "px";
     localStorage.setItem(key, String(size));
   }
   apply();
   document.getElementById("type-down").addEventListener("click", function () {
-    size = Math.max(18, size - 1);
+    size = Math.max(14, size - 1);
     apply();
   });
   document.getElementById("type-up").addEventListener("click", function () {
