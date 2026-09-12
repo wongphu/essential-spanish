@@ -10,12 +10,12 @@ This is not a grammar exam. It is a short, large-type guide with Panama examples
 
 | Format | File | Notes |
 |---|---|---|
-| **Print / tablet** | [`essential-spanish.pdf`](essential-spanish.pdf) | Letter size, about 37 pages. |
-| **Phone (with audio)** | [`index.html`](index.html) + [`audio/`](audio/) | Open the HTML in a browser. Keep the `audio` folder next to the HTML file. Speaker buttons play each Spanish line. |
+| **Print / tablet** | [`docs/essential-spanish.pdf`](docs/essential-spanish.pdf) | Letter size, about 37 pages. |
+| **Phone (with audio)** | [`docs/index.html`](docs/index.html) + [`docs/audio/`](docs/audio/) | Open the HTML in a browser. Keep the `audio` folder next to the HTML file. Speaker buttons play each Spanish line. |
 
 The web page has **A− / A+** type-size buttons and a jump-to-chapter menu. Audio is web-only (not in the PDF).
 
-To host the web booklet, upload `index.html` and the `audio/` folder together so the relative `audio/{id}.mp3` paths still work.
+To host the web booklet, upload `docs/index.html` and the `docs/audio/` folder together so the relative `audio/{id}.mp3` paths still work.
 
 ## What's inside
 
@@ -44,7 +44,7 @@ Chapters 12 (commands), the cheat sheets, and the pocket page are the ones peopl
 
 ## Rebuild
 
-Content lives in `booklet_content.py`. Do not hand-edit `index.html` or the PDF; they are generated.
+Content lives in `booklet_content.py`. Do not hand-edit `docs/index.html` or `docs/essential-spanish.pdf`; they are generated.
 
 From this folder, on macOS:
 
@@ -55,9 +55,9 @@ python3 build_booklet.py
 
 That regenerates:
 
-1. `index.html`
-2. MP3s in `audio/` for any **new** Spanish lines (existing clips are cached)
-3. `essential-spanish.pdf`
+1. `docs/index.html`
+2. MP3s in `docs/audio/` for any **new** Spanish lines (existing clips are cached)
+3. `docs/essential-spanish.pdf`
 
 **Needs**
 
@@ -72,7 +72,7 @@ The first audio run takes several minutes (~480 clips). Later runs only build ne
 | Change wording or add a phrase | `booklet_content.py`, then `python3 build_booklet.py` |
 | New Spanish line with audio | Same; new MP3s generate automatically |
 | Different TTS voice / rate | `EDGE_TTS_VOICE` / `EDGE_TTS_RATE` (or the constants in `build_booklet.py`) |
-| Force-rebuild all audio | Delete `audio/` and rebuild |
+| Force-rebuild all audio | Delete `docs/audio/` and rebuild |
 
 ## Layout
 
@@ -80,9 +80,9 @@ The first audio run takes several minutes (~480 clips). Later runs only build ne
 |---|---|
 | `booklet_content.py` | Source of truth: title, chapters, tables, phrases |
 | `build_booklet.py` | HTML + PDF + TTS generator |
-| `index.html` | Generated web booklet |
-| `essential-spanish.pdf` | Generated print booklet |
-| `audio/*.mp3` | Generated clips; filename is a hash of the spoken text |
+| `docs/index.html` | Generated web booklet |
+| `docs/essential-spanish.pdf` | Generated print booklet |
+| `docs/audio/*.mp3` | Generated clips; filename is a hash of the spoken text |
 | `HANDOFF.md` | Maintainer notes (design decisions, content structure, known gaps) |
 
 Keep the booklet short. If adding a topic, ask whether a retiree needs it at the farmacia this week.

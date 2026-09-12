@@ -39,9 +39,10 @@ from reportlab.platypus import (
 from booklet_content import SECTIONS, SUBTITLE, TAGLINE, TITLE
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-HTML_PATH = os.path.join(ROOT, "index.html")
-PDF_PATH = os.path.join(ROOT, "essential-spanish.pdf")
-AUDIO_DIR = os.path.join(ROOT, "audio")
+DOCS_DIR = os.path.join(ROOT, "docs")
+HTML_PATH = os.path.join(DOCS_DIR, "index.html")
+PDF_PATH = os.path.join(DOCS_DIR, "essential-spanish.pdf")
+AUDIO_DIR = os.path.join(DOCS_DIR, "audio")
 # Microsoft Edge neural TTS at build time (clips are cached MP3s).
 # Roberto is Panamanian Spanish. Rate is slightly under 1.0 so the
 # phrases are easier to catch. Needs internet only while generating.
@@ -868,6 +869,7 @@ def group_pdf_blocks(blocks):
 
 
 def build_pdf():
+    os.makedirs(DOCS_DIR, exist_ok=True)
     SECTION_PAGES.clear()
     _write_pdf(BytesIO())
     return _write_pdf(PDF_PATH)
@@ -1668,6 +1670,7 @@ def build_html():
 </body>
 </html>
 """
+    os.makedirs(DOCS_DIR, exist_ok=True)
     with open(HTML_PATH, "w", encoding="utf-8") as f:
         f.write(html)
     return HTML_PATH

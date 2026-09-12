@@ -10,8 +10,8 @@ Kitchen-table booklet for **English-speaking retirees living in Panama**. Goal: 
 
 | Format | File | Use |
 |---|---|---|
-| **PDF (print)** | `essential-spanish.pdf` | Print or keep on a tablet. Letter size, ~37 pages. |
-| **Web (phone)** | `index.html` + `audio/` | Open in a browser. Keep the `audio` folder **next to** the HTML file. Speaker buttons play each Spanish line. |
+| **PDF (print)** | `docs/essential-spanish.pdf` | Print or keep on a tablet. Letter size, ~37 pages. |
+| **Web (phone)** | `docs/index.html` + `docs/audio/` | Open in a browser. Keep the `audio` folder **next to** the HTML file. Speaker buttons play each Spanish line. |
 
 Do **not** ship `essential-spanish-grammar.pdf` — that old filename was retired when the title dropped “Grammar.”
 
@@ -29,9 +29,9 @@ python3 build_booklet.py
 
 That regenerates:
 
-1. `index.html`
-2. MP3s in `audio/` for any **new** Spanish lines (existing clips are cached)
-3. `essential-spanish.pdf`
+1. `docs/index.html`
+2. MP3s in `docs/audio/` for any **new** Spanish lines (existing clips are cached)
+3. `docs/essential-spanish.pdf`
 
 **Needs**
 
@@ -41,7 +41,7 @@ That regenerates:
 
 First audio run takes several minutes (~485 clips after slash-alternatives are split). Later runs only build new hashes.
 
-Edit **content** in `booklet_content.py`, then rebuild. Do not hand-edit `index.html` or the PDF; they are generated.
+Edit **content** in `booklet_content.py`, then rebuild. Do not hand-edit `docs/index.html` or `docs/essential-spanish.pdf`; they are generated.
 
 ---
 
@@ -51,9 +51,9 @@ Edit **content** in `booklet_content.py`, then rebuild. Do not hand-edit `index.
 |---|---|
 | `booklet_content.py` | Source of truth: title, chapters, tables, phrases |
 | `build_booklet.py` | HTML + PDF + TTS generator |
-| `index.html` | Generated web booklet |
-| `essential-spanish.pdf` | Generated print booklet |
-| `audio/*.mp3` | Generated clips; filename is a hash of the spoken text |
+| `docs/index.html` | Generated web booklet |
+| `docs/essential-spanish.pdf` | Generated print booklet |
+| `docs/audio/*.mp3` | Generated clips; filename is a hash of the spoken text |
 | `HANDOFF.md` | This file |
 
 ---
@@ -137,7 +137,7 @@ Play buttons wrap Spanish cells in `pairs`, `phrases`, and Spanish table columns
 ## What is not done
 
 - No audio in the PDF
-- No app store / hosting setup — `index.html` is opened locally or dropped on any static host **with** the `audio/` folder
+- No app store / hosting setup — `docs/index.html` is opened locally or dropped on any static host **with** the `docs/audio/` folder
 - No spaced-repetition drills or quizzes
 - No study of long-term Panama retirees (research used classroom SLA + Central American Peace Corps data)
 
@@ -150,7 +150,7 @@ Play buttons wrap Spanish cells in `pairs`, `phrases`, and Spanish table columns
 | Change wording or add a phrase | `booklet_content.py`, then `python3 build_booklet.py` |
 | New Spanish line with audio | Same; new MP3s generate automatically |
 | Different TTS voice / rate | `EDGE_TTS_VOICE` / `EDGE_TTS_RATE` (defaults in `build_booklet.py`; Margarita is `es-PA-MargaritaNeural`) |
-| Force-rebuild all audio | Delete `audio/` and rebuild |
-| Host the web booklet | Upload `index.html` + `audio/` together; relative `audio/{id}.mp3` paths must stay |
+| Force-rebuild all audio | Delete `docs/audio/` and rebuild |
+| Host the web booklet | Upload `docs/index.html` + `docs/audio/` together; relative `audio/{id}.mp3` paths must stay |
 
 Keep the booklet short. If adding a topic, ask whether a retiree needs it at the farmacia this week.
