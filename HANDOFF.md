@@ -71,7 +71,7 @@ Tone: conversational, large type, Panama examples. `usted` is the default “you
 7. **Ch. 6** — *ser / estar / hay* — **estar is the one to practice**  
 8. **Ch. 7** — present tense  
 9. **Ch. 8** — daily verbs  
-10. **Ch. 9** — *gustar* (don’t say *yo gusto*)  
+10. **Ch. 9** — *gustar*: start with *me*, not *yo*; *Me gustaría* at the counter  
 11. **Ch. 10** — questions, *no*, and the magic five (*quiero / puedo / necesito / tengo que / voy a*)  
 12. **Ch. 11** — two pasts; the English trap (don’t use the snapshot past for “used to / was -ing”)  
 13. **Ch. 12** — commands: **formal (usted) and informal (tú)** side by side  

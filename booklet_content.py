@@ -547,41 +547,109 @@ add({
 add({
     "id": "gustar",
     "kicker": "Chapter 9",
-    "title": "I like it — the gustar twist",
+    "title": "I like it — start with me, not yo",
     "intro": (
-        "<es>Gustar</es> is not “I like.” It is closer to “it is pleasing to me.” "
-        "That is why the verb agrees with the thing you like, not with you. Weird for "
-        "about a week. Then it clicks."
+        "English says “I like coffee.” Spanish says the coffee is pleasing to me. "
+        "You will want <es>Yo gusto.</es> That sentence is a wrong turn. "
+        "Start with <es>me</es>. The thing you like does the verb."
     ),
     "blocks": [
+        {"type": "h2", "text": "One thing, or more than one"},
+        {"type": "p", "text": (
+            "Match the verb to the thing, not to you. One thing: <es>gusta</es>. "
+            "Several things: <es>gustan</es>. A verb after it counts as one thing, "
+            "so it stays <es>gusta</es>."
+        )},
         {"type": "pairs", "items": [
-            ["Me gusta el café.", "I like coffee. (one thing: gusta)"],
-            ["Me gustan las empanadas.", "I like empanadas. (plural: gustan)"],
+            ["Me gusta el café.", "I like coffee."],
+            ["Me gusta Boquete.", "I like Boquete."],
+            ["Me gustan las empanadas.", "I like empanadas."],
+            ["Me gustan las islas.", "I like the islands."],
             ["No me gusta el ruido.", "I don't like the noise."],
-            ["¿Le gusta el pescado?", "Do you like fish? (usted)"],
-            ["Nos gusta Panamá.", "We like Panama."],
+            ["No me gustan los mosquitos.", "I don't like mosquitoes."],
         ]},
-        {"type": "table", "headers": ["Word", "English"], "rows": [
-            ["me", "to me"],
-            ["te", "to you (tú)"],
-            ["le", "to you (usted) / to him / to her"],
-            ["nos", "to us"],
-            ["les", "to you all / to them"],
+        {"type": "h2", "text": "With a verb — still gusta"},
+        {"type": "p", "text": (
+            "Park a dictionary-form verb after <es>gusta</es>, the same way you park a noun. "
+            "This is how you say you like doing something. Never "
+            "<es>gustan bailar</es> — the activity is one thing."
+        )},
+        {"type": "pairs", "items": [
+            ["Me gusta bailar.", "I like to dance."],
+            ["Me gusta caminar.", "I like to walk."],
+            ["Me gusta nadar.", "I like to swim."],
+            ["No me gusta manejar.", "I don't like to drive."],
+            ["¿A usted le gusta caminar?", "Do you like to walk?"],
+        ]},
+        {"type": "h2", "text": "Asking — usted first"},
+        {"type": "p", "text": (
+            "At a restaurant or a neighbor's table, ask with <es>le</es>. "
+            "That is the polite “you.”"
+        )},
+        {"type": "pairs", "items": [
+            ["¿Le gusta el pescado?", "Do you like fish?"],
+            ["¿Le gustan las empanadas?", "Do you like empanadas?"],
+            ["¿Le gusta Panamá?", "Do you like Panama?"],
+            ["Sí, me gusta.", "Yes, I like it."],
+            ["No, no me gusta.", "No, I don't like it."],
         ]},
         {"type": "p", "text": (
-            "Want to make it extra clear? Add a phrase up front: "
-            "<es>A mí me gusta…</es> <es>A usted le gusta…</es> "
-            "You'll hear that a lot when people contrast tastes."
+            "Once a friend uses <es>tú</es> with you, you can ask "
+            "<es>¿Te gusta el café?</es> Until then, stay with <es>le</es>."
+        )},
+        {"type": "h2", "text": "Who is pleased"},
+        {"type": "p", "text": (
+            "The little word in front tells who likes it. The verb still follows "
+            "the thing: <es>gusta</es> or <es>gustan</es>."
+        )},
+        {"type": "table", "headers": ["English", "One thing", "More than one"], "audio_cols": [1, 2], "rows": [
+            ["I like", "Me gusta", "Me gustan"],
+            ["you like (tú)", "Te gusta", "Te gustan"],
+            ["you like (usted); he or she likes", "Le gusta", "Le gustan"],
+            ["we like", "Nos gusta", "Nos gustan"],
+            ["you all like; they like", "Les gusta", "Les gustan"],
+        ]},
+        {"type": "p", "text": (
+            "<es>Le</es> is busy: polite “you,” or him, or her. If that is messy, "
+            "name the person up front. You'll hear this when tastes differ."
+        )},
+        {"type": "pairs", "items": [
+            ["A mí me gusta el café.", "I like coffee. (me, specifically)"],
+            ["A usted le gusta el té.", "You like tea. (usted)"],
+            ["A ella le gustan las islas.", "She likes the islands."],
+            ["Nos gusta Panamá.", "We like Panama."],
+        ]},
+        {"type": "h2", "text": "I'd like — the polite shop sentence"},
+        {"type": "p", "text": (
+            "Park <es>Me gustaría…</es> as a chunk, like <es>Quiero</es>. "
+            "It is softer, and it is what you say at a counter. You do not need "
+            "the rest of that verb. This one line will do."
+        )},
+        {"type": "pairs", "items": [
+            ["Me gustaría una mesa para dos.", "I would like a table for two."],
+            ["Me gustaría el menú.", "I would like the menu."],
+            ["Me gustaría pagar con tarjeta.", "I would like to pay by card."],
+            ["¿Le gustaría café?", "Would you like coffee?"],
+        ]},
+        {"type": "h2", "text": "The same machine"},
+        {"type": "p", "text": (
+            "A few other verbs run backwards the same way. The thing (or the body part) "
+            "does the verb. You already know one from Chapter 1: <es>Me duele aquí.</es>"
+        )},
+        {"type": "pairs", "items": [
+            ["Me duele la rodilla.", "My knee hurts."],
+            ["Me encanta este lugar.", "I love this place."],
+            ["Me encantan las islas.", "I love the islands."],
+            ["Me falta dinero.", "I'm short of money."],
+        ]},
+        {"type": "p", "text": (
+            "<es>Me encanta</es> is the friendly “I love it” for food, towns, and weather — "
+            "not usually for people. For family, <es>Quiero mucho a mi familia</es> is safer."
         )},
         {"type": "tip", "title": "Don't say yo gusto", "text": (
             "English wants “I like.” Spanish will not take <es>Yo gusto el café.</es> "
-            "Start with <es>me</es>: <es>Me gusta el café.</es> Same family: "
-            "<es>Me duele aquí. Me encanta este lugar. Me falta dinero.</es>"
-        )},
-        {"type": "p", "text": (
-            "Love it? Same pattern: <es>Me encanta este lugar.</es> <es>Me encantan las islas.</es> "
-            "That is the friendly way to say “I love it” about food, towns, and weather — "
-            "not usually about people. For people, <es>Quiero mucho a…</es> is safer."
+            "If you freeze, start with <es>Me gusta…</es> and name the thing. "
+            "Close enough is plenty."
         )},
     ],
 })
@@ -1329,7 +1397,7 @@ add({
             ["¿Puede…?", "a verb", "¿Puede repetir? ¿Puede ayudarme?"],
             ["Tengo que…", "a verb", "Tengo que ir al banco."],
             ["Voy a…", "a verb", "Voy a llamar mañana."],
-            ["Me gusta…", "one thing you like", "Me gusta el café."],
+            ["Me gusta…", "one thing, or a verb", "Me gusta el café. Me gusta bailar."],
             ["Me gustan…", "more than one thing you like", "Me gustan las islas."],
             ["¿Dónde está…?", "a place or thing", "¿Dónde está la caja?"],
             ["¿Cuánto cuesta…?", "a thing", "¿Cuánto cuesta esto?"],

@@ -28,7 +28,7 @@ To host the web booklet, upload `docs/index.html` and the `docs/audio/` folder t
 7. *ser / estar / hay* — **estar is the one to practice**
 8. Present tense
 9. Daily verbs
-10. *gustar* (don't say *yo gusto*)
+10. *gustar* — start with *me*, not *yo*; *Me gustaría* at the counter
 11. Questions, *no*, and the magic five (*quiero / puedo / necesito / tengo que / voy a*)
 12. Two pasts
 13. Commands: formal (*usted*) and informal (*tú*) side by side
