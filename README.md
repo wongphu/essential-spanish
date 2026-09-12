@@ -37,8 +37,9 @@ To host the web booklet, upload `docs/index.html` and the `docs/audio/` folder t
 16. Numbers, money (USD/balboa), time
 17. Little words; *lo / la* as recognition
 18. Panama layer (local words)
-19. Phrasebook — clinic, pharmacy, restaurant, home repairs, taxi, 911
-20. Cheat sheets (photo page) and a pocket/wallet card
+19. Filling out a form
+20. Phrasebook — clinic, pharmacy, restaurant, home repairs, taxi, 911
+21. Cheat sheets (photo page) and a pocket/wallet card
 
 Chapters 12 (commands), the cheat sheets, and the pocket page are the ones people actually carry.
 

@@ -2,7 +2,7 @@
 
 Kitchen-table booklet for **English-speaking retirees living in Panama**. Goal: be understood in daily life (farmacia, clinic, taxi, neighbors), not pass a grammar exam.
 
-**Date:** 2026-09-11
+**Date:** 2026-09-12
 
 ---
 
@@ -80,9 +80,10 @@ Tone: conversational, large type, Panama examples. `usted` is the default “you
 16. **Ch. 15** — numbers, money (USD/balboa), time  
 17. **Ch. 16** — little words; *lo/la* as recognition  
 18. **Ch. 17** — Panama layer (local words, building-manager note)  
-19. **Ch. 18** — phrasebook (clinic, pharmacy, restaurant, home repairs, taxi, 911)  
-20. **Cheat sheets** — photo page  
-21. **Pocket page** — wallet card  
+19. **Ch. 18** — filling out a form (labels, dates, one last name, cédula vs passport)  
+20. **Ch. 19** — phrasebook (clinic, pharmacy, restaurant, home repairs, taxi, 911)  
+21. **Cheat sheets** — photo page  
+22. **Pocket page** — wallet card  
 
 Chapters 12 (commands), cheat sheets, and the pocket page are the ones people will actually carry.
 

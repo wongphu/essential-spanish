@@ -1056,8 +1056,114 @@ add({
 })
 
 add({
-    "id": "phrasebook",
+    "id": "forms",
     "kicker": "Chapter 18",
+    "title": "Filling out a form",
+    "intro": (
+        "The clinic clipboard, the bank, the building office, immigration. The boxes "
+        "repeat. If you know the labels, you can point — even when the clerk is talking "
+        "too fast."
+    ),
+    "blocks": [
+        {"type": "p", "text": (
+            "A form is not a conversation. You do not have to say a perfect sentence. "
+            "Fill the box, or point at it and ask <es>¿Qué es esto?</es> What is this?"
+        )},
+        {"type": "h2", "text": "Who you are"},
+        {"type": "table", "headers": ["On the form", "English"], "rows": [
+            ["nombre", "first name"],
+            ["segundo nombre", "middle name"],
+            ["apellido", "last name"],
+            ["primer apellido", "first last name"],
+            ["segundo apellido", "second last name"],
+            ["nombre completo", "full name"],
+            ["fecha de nacimiento", "date of birth"],
+            ["lugar de nacimiento", "place of birth"],
+            ["nacionalidad", "nationality"],
+            ["país", "country"],
+            ["pasaporte", "passport"],
+            ["número de pasaporte", "passport number"],
+            ["cédula", "national ID card"],
+            ["sexo", "sex"],
+            ["masculino", "male"],
+            ["femenino", "female"],
+        ]},
+        {"type": "p", "text": (
+            "Spanish forms often want two last names: father's, then mother's. "
+            "If you only have one, put it in <es>primer apellido</es> and leave "
+            "<es>segundo apellido</es> blank — or write a dash. Do not drop your "
+            "middle name into an <es>apellido</es> box unless they ask for "
+            "<es>segundo nombre</es>."
+        )},
+        {"type": "p", "text": (
+            "On a form, U.S. nationality is <es>estadounidense</es>. "
+            "<es>Americano</es> can mean the whole continent."
+        )},
+        {"type": "h2", "text": "Dates — day first"},
+        {"type": "p", "text": (
+            "Panama writes the day before the month. "
+            "<es>15/03/1952</es> is 15 March 1952, not March 15. "
+            "If you write <es>3/15/1952</es>, the form will think you mean 3 March."
+        )},
+        {"type": "pairs", "items": [
+            ["el 15 de marzo de 1952", "March 15, 1952"],
+            ["fecha de hoy", "today's date"],
+        ]},
+        {"type": "h2", "text": "Married, retired, and how to reach you"},
+        {"type": "table", "headers": ["On the form", "English"], "rows": [
+            ["estado civil", "marital status"],
+            ["soltero", "single (a man)"],
+            ["soltera", "single (a woman)"],
+            ["casado", "married (a man)"],
+            ["casada", "married (a woman)"],
+            ["viudo", "widowed (a man)"],
+            ["viuda", "widowed (a woman)"],
+            ["divorciado", "divorced (a man)"],
+            ["divorciada", "divorced (a woman)"],
+            ["ocupación", "occupation"],
+            ["jubilado", "retired (a man)"],
+            ["jubilada", "retired (a woman)"],
+            ["dirección", "address"],
+            ["edificio", "building"],
+            ["apartamento", "apartment"],
+            ["teléfono", "phone"],
+            ["celular", "cell phone"],
+            ["correo electrónico", "email"],
+            ["firma", "signature"],
+            ["fecha", "date"],
+        ]},
+        {"type": "p", "text": (
+            "<es>Firma</es> means sign it — your usual signature, not your name in print. "
+            "If the form says <es>letra de molde</es> or <es>letra imprenta</es>, print. "
+            "Don't use cursive in the other boxes."
+        )},
+        {"type": "panama", "title": "No cédula yet", "text": (
+            "A <es>cédula</es> is the Panamanian ID card. Until you have one, the answer "
+            "is your passport. Write the passport number in that box if they let you, "
+            "or say: <es>No tengo cédula. Tengo pasaporte.</es>"
+        )},
+        {"type": "h2", "text": "At the window"},
+        {"type": "phrases", "columns": ["Spanish", "English"], "rows": [
+            ["¿Qué es esto?", "What is this?"],
+            ["¿Dónde firmo?", "Where do I sign?"],
+            ["¿Puede ayudarme con este formulario?", "Can you help me with this form?"],
+            ["No tengo cédula. Tengo pasaporte.", "I don't have a cédula. I have a passport."],
+            ["Solo tengo un apellido.", "I only have one last name."],
+            ["Soy ciudadano estadounidense.", "I am a U.S. citizen. (a man)"],
+            ["Soy ciudadana estadounidense.", "I am a U.S. citizen. (a woman)"],
+            ["¿Cómo se escribe?", "How is that spelled?"],
+            ["¿Con bolígrafo negro?", "With a black pen?"],
+        ]},
+        {"type": "tip", "title": "If you freeze", "text": (
+            "Show the passport. Point at the box. Say <es>¿Qué es esto?</es> "
+            "A kind clerk would rather fill it with you than watch you guess."
+        )},
+    ],
+})
+
+add({
+    "id": "phrasebook",
+    "kicker": "Chapter 19",
     "title": "Phrasebook for a regular week",
     "intro": (
         "Keep this chapter on your phone. Read the Spanish out loud once before you "
