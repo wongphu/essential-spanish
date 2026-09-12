@@ -4,14 +4,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import html as html_lib
-import json
 import os
 import re
-import subprocess
-import urllib.error
-import urllib.request
 from io import BytesIO
 from xml.sax.saxutils import escape as xml_escape
 
@@ -45,23 +42,13 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(ROOT, "index.html")
 PDF_PATH = os.path.join(ROOT, "essential-spanish.pdf")
 AUDIO_DIR = os.path.join(ROOT, "audio")
-# Local Qwen3-TTS via oMLX (OpenAI-compatible /v1/audio/speech).
-# CustomVoice (not Base) has named speakers. Aiden stays clearer in Spanish;
-# ryan often inserts laughs even with a no-laughter instruct.
-TTS_BASE_URL = os.environ.get("OMLX_BASE_URL", "http://127.0.0.1:8000")
-TTS_MODEL = os.environ.get("OMLX_TTS_MODEL", "Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit")
-TTS_LANGUAGE = os.environ.get("OMLX_TTS_LANGUAGE", "Spanish")
-TTS_VOICE = os.environ.get("OMLX_TTS_VOICE", "aiden")
-TTS_SPEED = float(os.environ.get("OMLX_TTS_SPEED", "1.0"))
-TTS_TIMEOUT = int(os.environ.get("OMLX_TTS_TIMEOUT", "120"))
-# Instruct + a cooler temperature keep the clips in a calm teacher register.
-TTS_INSTRUCT = os.environ.get(
-    "OMLX_TTS_INSTRUCT",
-    "Speak clearly and calmly, like a Spanish teacher. Neutral tone. "
-    "Do not laugh, giggle, chuckle, or add extra sounds.",
-)
-TTS_TEMPERATURE = float(os.environ.get("OMLX_TTS_TEMPERATURE", "0.7"))
-OMLX_SETTINGS = os.path.expanduser("~/.omlx/settings.json")
+# Microsoft Edge neural TTS at build time (clips are cached MP3s).
+# Roberto is Panamanian Spanish. Rate is slightly under 1.0 so the
+# phrases are easier to catch. Needs internet only while generating.
+TTS_MODEL = os.environ.get("EDGE_TTS_MODEL", "edge-tts")
+TTS_VOICE = os.environ.get("EDGE_TTS_VOICE", "es-PA-RobertoNeural")
+TTS_RATE = os.environ.get("EDGE_TTS_RATE", "-5%")
+TTS_ATTEMPTS = int(os.environ.get("EDGE_TTS_ATTEMPTS", "5"))
 
 # id -> spoken Spanish, filled while building HTML
 UTTERANCES = {}
@@ -319,22 +306,34 @@ def tts_text(raw: str, skip_digits: bool = False) -> str:
     """Plain Spanish for the speaker: strip markup, English asides, and slashes."""
     text = ES_TAG.sub(r"\1", raw or "")
     text = re.sub(r"<[^>]+>", "", text)
-    text = text.replace("…", ",")
-    text = re.sub(r"\.{3,}", ",", text)
+    # Ellipsis is a prompt, not a comma. "¿Dónde está…?" must not become "está,?"
+    text = text.replace("…", " ")
+    text = re.sub(r"\.{3,}", " ", text)
     text = re.sub(r"\([^)]*\)", " ", text)
+
+    def _expand_o_a(m):
+        masc = m.group(1)
+        fem = masc[:-1] + ("A" if masc[-1].isupper() else "a")
+        return masc + ", " + fem
+
+    # alérgico/a → alérgico, alérgica (before slash folding)
+    text = re.sub(r"(\w+o)/a\b", _expand_o_a, text, flags=re.IGNORECASE)
     text = text.replace(" / ", ", ")
-    text = text.replace("/", ", ")
+    text = text.replace("/", " ")
+    text = re.sub(r"\s*\+\s*verb\b", " ", text, flags=re.I)
+    text = re.sub(r"\bX\b", "treinta", text)
     if skip_digits:
         # Chapter 15 number grid: speak "cero", not "0 cero".
         text = re.sub(r"\d+(?:[.,]\d+)*", " ", text)
     text = re.sub(r"\s+", " ", text).strip(" ,")
     text = re.sub(r"\s+,", ",", text)
     text = re.sub(r",\s*,", ",", text)
+    text = re.sub(r"\s+([?!.])", r"\1", text)
     return text.strip()
 
 
 def audio_id(spoken: str) -> str:
-    payload = f"{TTS_MODEL}|{TTS_VOICE}|{TTS_INSTRUCT}|{TTS_TEMPERATURE}|{spoken}"
+    payload = f"{TTS_MODEL}|{TTS_VOICE}|{TTS_RATE}|{spoken}"
     return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:12]
 
 
@@ -1674,142 +1673,38 @@ def build_html():
     return HTML_PATH
 
 
-def omlx_api_key() -> str:
-    key = os.environ.get("OMLX_API_KEY")
-    if key:
-        return key
+def ping_edge_tts() -> None:
     try:
-        with open(OMLX_SETTINGS, encoding="utf-8") as f:
-            data = json.load(f)
-        return (data.get("auth") or {}).get("api_key") or ""
-    except (OSError, json.JSONDecodeError):
-        return ""
-
-
-def omlx_headers() -> dict:
-    headers = {"Content-Type": "application/json"}
-    key = omlx_api_key()
-    if key:
-        headers["Authorization"] = "Bearer " + key
-    return headers
-
-
-def ping_omlx() -> None:
-    url = TTS_BASE_URL.rstrip("/") + "/v1/models"
-    req = urllib.request.Request(url, headers=omlx_headers(), method="GET")
-    with urllib.request.urlopen(req, timeout=10) as resp:
-        payload = json.loads(resp.read().decode("utf-8"))
-    ids = [m.get("id") for m in payload.get("data") or [] if m.get("id")]
-    if TTS_MODEL not in ids:
-        listed = ", ".join(ids) or "(none)"
+        import edge_tts
+    except ImportError as e:
         raise RuntimeError(
-            f"oMLX is running but model {TTS_MODEL!r} is not available. Models: {listed}"
-        )
+            "edge-tts is not installed. python3 -m pip install --user edge-tts"
+        ) from e
+    voices = asyncio.run(edge_tts.list_voices())
+    names = {v.get("ShortName") for v in voices if v.get("ShortName")}
+    if TTS_VOICE not in names:
+        raise RuntimeError(f"Edge TTS voice {TTS_VOICE!r} is not available.")
 
 
-def _looks_like_mp3(data: bytes, content_type: str) -> bool:
-    ctype = (content_type or "").lower()
-    if "mpeg" in ctype or "mp3" in ctype:
-        return True
-    return data[:3] == b"ID3" or data[:2] in (b"\xff\xf3", b"\xff\xfa", b"\xff\xfb", b"\xff\xf2")
+async def _edge_save(text: str, dest_mp3: str) -> None:
+    import edge_tts
 
-
-def _mp3_duration(path: str) -> float:
-    try:
-        out = subprocess.check_output(["afinfo", path], text=True)
-    except (OSError, subprocess.CalledProcessError):
-        return 0.0
-    for line in out.splitlines():
-        if "estimated duration" in line:
-            try:
-                return float(line.split()[-2])
-            except (IndexError, ValueError):
-                return 0.0
-    return 0.0
-
-
-def _short_clip_max_seconds(text: str) -> float:
-    """Tiny words sometimes come back as a 4–6s laugh; retry those."""
-    compact = re.sub(r"\s+", " ", text).strip(" .¡!¿?")
-    if len(compact) <= 6 and len(compact.split()) <= 2:
-        return 1.8
-    return 0.0
-
-
-def synthesize_omlx(text: str, dest_mp3: str) -> None:
-    url = TTS_BASE_URL.rstrip("/") + "/v1/audio/speech"
-    payload = {
-        "model": TTS_MODEL,
-        "input": text,
-        "language": TTS_LANGUAGE,
-        "response_format": "mp3",
-        "speed": TTS_SPEED,
-        "temperature": TTS_TEMPERATURE,
-    }
-    if TTS_VOICE:
-        payload["voice"] = TTS_VOICE
-    if TTS_INSTRUCT:
-        payload["instructions"] = TTS_INSTRUCT
-    body = json.dumps(payload).encode("utf-8")
-    max_sec = _short_clip_max_seconds(text)
-    attempts = 4 if max_sec else 1
     last_err = None
-    for attempt in range(1, attempts + 1):
-        req = urllib.request.Request(url, data=body, headers=omlx_headers(), method="POST")
+    tmp = dest_mp3 + ".part"
+    for attempt in range(1, TTS_ATTEMPTS + 1):
         try:
-            with urllib.request.urlopen(req, timeout=TTS_TIMEOUT) as resp:
-                data = resp.read()
-                content_type = resp.headers.get("Content-Type", "")
-        except urllib.error.HTTPError as e:
-            detail = e.read().decode("utf-8", errors="replace")[:300]
-            last_err = RuntimeError(f"oMLX TTS HTTP {e.code}: {detail}")
-            continue
-        if not data:
-            last_err = RuntimeError("oMLX TTS returned an empty body")
-            continue
-        tmp = dest_mp3 + ".part"
-        try:
-            if _looks_like_mp3(data, content_type):
-                with open(tmp, "wb") as f:
-                    f.write(data)
-                os.replace(tmp, dest_mp3)
-            else:
-                wav = dest_mp3 + ".wav"
-                with open(wav, "wb") as f:
-                    f.write(data)
-                try:
-                    subprocess.run(
-                        [
-                            "ffmpeg", "-y", "-loglevel", "error",
-                            "-i", wav,
-                            "-codec:a", "libmp3lame", "-q:a", "6",
-                            tmp,
-                        ],
-                        check=True,
-                        capture_output=True,
-                    )
-                    os.replace(tmp, dest_mp3)
-                finally:
-                    if os.path.exists(wav):
-                        os.remove(wav)
-                    if os.path.exists(tmp) and not os.path.exists(dest_mp3):
-                        os.remove(tmp)
+            comm = edge_tts.Communicate(text, TTS_VOICE, rate=TTS_RATE)
+            await comm.save(tmp)
+            if not os.path.exists(tmp) or os.path.getsize(tmp) < 400:
+                raise RuntimeError("clip too small")
+            os.replace(tmp, dest_mp3)
+            return
         except Exception as e:
             last_err = e
-            continue
-        if max_sec:
-            dur = _mp3_duration(dest_mp3)
-            if dur > max_sec:
-                last_err = RuntimeError(
-                    f"short clip too long ({dur:.1f}s > {max_sec:.1f}s) for {text!r}"
-                )
-                if os.path.exists(dest_mp3):
-                    os.remove(dest_mp3)
-                continue
-        return
-    if last_err:
-        raise last_err
-    raise RuntimeError(f"oMLX TTS failed for {text!r}")
+            if os.path.exists(tmp):
+                os.remove(tmp)
+            await asyncio.sleep(min(2 ** attempt, 16))
+    raise RuntimeError(f"Edge TTS failed for {text!r}: {last_err}")
 
 
 def prune_unused_audio(keep_ids):
@@ -1826,12 +1721,12 @@ def prune_unused_audio(keep_ids):
 
 
 def build_audio():
-    """Speak each unique Spanish line with local oMLX Qwen3-TTS and save MP3s."""
+    """Speak each unique Spanish line with Edge TTS and save MP3s."""
     os.makedirs(AUDIO_DIR, exist_ok=True)
     try:
-        ping_omlx()
+        ping_edge_tts()
     except Exception as e:
-        print(f"oMLX TTS unavailable ({e}); web page will use the browser voice as a fallback.")
+        print(f"Edge TTS unavailable ({e}); web page will use the browser voice as a fallback.")
         return 0
 
     made = 0
@@ -1840,30 +1735,31 @@ def build_audio():
     items = sorted(UTTERANCES.items())
     total = len(items)
 
-    for i, (uid, text) in enumerate(items, 1):
-        mp3 = os.path.join(AUDIO_DIR, uid + ".mp3")
-        if os.path.exists(mp3) and os.path.getsize(mp3) > 400:
-            skipped += 1
-            continue
-        try:
-            synthesize_omlx(text, mp3)
-            if not os.path.exists(mp3) or os.path.getsize(mp3) < 400:
-                raise RuntimeError("clip too small")
-            made += 1
-        except Exception as e:
-            print("TTS failed:", uid, text[:70], "—", e)
-            failed += 1
-            if os.path.exists(mp3) and os.path.getsize(mp3) < 400:
-                os.remove(mp3)
-        if i % 25 == 0 or i == total:
-            print(f"Audio progress: {i}/{total} ({made} new, {skipped} cached, {failed} failed)")
+    async def _run():
+        nonlocal made, skipped, failed
+        for i, (uid, text) in enumerate(items, 1):
+            mp3 = os.path.join(AUDIO_DIR, uid + ".mp3")
+            if os.path.exists(mp3) and os.path.getsize(mp3) > 400:
+                skipped += 1
+            else:
+                try:
+                    await _edge_save(text, mp3)
+                    made += 1
+                except Exception as e:
+                    print("TTS failed:", uid, text[:70], "—", e)
+                    failed += 1
+                    if os.path.exists(mp3) and os.path.getsize(mp3) < 400:
+                        os.remove(mp3)
+            if i % 25 == 0 or i == total:
+                print(f"Audio progress: {i}/{total} ({made} new, {skipped} cached, {failed} failed)")
 
+    asyncio.run(_run())
     pruned = prune_unused_audio(UTTERANCES)
     extra = f", pruned {pruned} old" if pruned else ""
     print(
         f"Audio: {made} new, {skipped} cached, {failed} failed, "
-        f"{len(UTTERANCES)} clips, model={TTS_MODEL}, voice={TTS_VOICE or '(none)'}, "
-        f"temp={TTS_TEMPERATURE}{extra}"
+        f"{len(UTTERANCES)} clips, model={TTS_MODEL}, voice={TTS_VOICE}, "
+        f"rate={TTS_RATE}{extra}"
     )
     return made
 
