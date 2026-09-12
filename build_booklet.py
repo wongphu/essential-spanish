@@ -531,6 +531,11 @@ def make_grid(headers, rows, styles, width, emphasis="first", hide_header=False,
             weights = [0.25, 0.25, 0.25, 0.25]
     elif n == 5:
         weights = [0.24, 0.19, 0.19, 0.19, 0.19]
+    elif n == 6:
+        if audio_set == {1, 3, 5}:
+            weights = [0.08, 0.25, 0.08, 0.25, 0.08, 0.26]
+        else:
+            weights = [0.14, 0.14, 0.14, 0.20, 0.19, 0.19]
     else:
         weights = [1 / n] * n
     col_w = [width * w for w in weights]
@@ -678,7 +683,7 @@ def render_block_pdf(block, styles, width, compact=False):
                 emphasis=block.get("emphasis", "first"),
                 hide_header=block.get("hide_header", False),
                 audio_cols=resolve_audio_cols(block),
-                compact=compact,
+                compact=compact or bool(block.get("compact")),
             )
         )
         bits.append(Spacer(1, 6 if compact else 10))
