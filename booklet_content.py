@@ -1152,6 +1152,7 @@ add({
             ["pasaporte", "passport"],
             ["número de pasaporte", "passport number"],
             ["cédula", "national ID card"],
+            ["número de seguro social", "social security number (Panama's CSS)"],
             ["sexo", "sex"],
             ["masculino", "male"],
             ["femenino", "female"],
@@ -1192,6 +1193,9 @@ add({
             ["jubilado", "retired (a man)"],
             ["jubilada", "retired (a woman)"],
             ["dirección", "address"],
+            ["provincia", "province"],
+            ["distrito", "district (like a county)"],
+            ["corregimiento", "neighborhood district"],
             ["edificio", "building"],
             ["apartamento", "apartment"],
             ["teléfono", "phone"],
@@ -1200,6 +1204,17 @@ add({
             ["firma", "signature"],
             ["fecha", "date"],
         ]},
+        {"type": "p", "text": (
+            "Panama addresses go big to small: <es>provincia</es> (Panamá, Chiriquí), "
+            "then <es>distrito</es> (Panamá, Boquete), then <es>corregimiento</es> "
+            "(Bella Vista, Bajo Boquete). "
+            "Street numbers are rare — a building name and a landmark do the work."
+        )},
+        {"type": "p", "text": (
+            "<es>Seguro social</es> here means Panama's <es>Caja de Seguro Social</es>, "
+            "not your U.S. number. If you are not in it, say "
+            "<es>No tengo seguro social.</es> and leave the box blank."
+        )},
         {"type": "p", "text": (
             "<es>Firma</es> is where you sign — your usual signature, not your name in print. "
             "If the form says <es>letra de molde</es> or <es>letra de imprenta</es>, print. "
@@ -1217,6 +1232,7 @@ add({
             ["¿Puede ayudarme con este formulario?", "Can you help me with this form?"],
             ["No tengo cédula. Tengo pasaporte.", "I don't have a cédula. I have a passport."],
             ["Solo tengo un apellido.", "I only have one last name."],
+            ["No tengo seguro social.", "I don't have Panamanian social security."],
             ["Soy ciudadano estadounidense.", "I am a U.S. citizen. (a man)"],
             ["Soy ciudadana estadounidense.", "I am a U.S. citizen. (a woman)"],
             ["¿Cómo se escribe?", "How is that spelled?"],

@@ -10,7 +10,7 @@ This is not a grammar exam. It is a short, large-type guide with Panama examples
 
 | Format | File | Notes |
 |---|---|---|
-| **Print / tablet** | [`docs/essential-spanish.pdf`](docs/essential-spanish.pdf) | Letter size, about 49 pages. |
+| **Print / tablet** | [`docs/essential-spanish.pdf`](docs/essential-spanish.pdf) | Letter size, about 50 pages. |
 | **Phone (with audio)** | [`docs/index.html`](docs/index.html) + [`docs/audio/`](docs/audio/) | Open the HTML in a browser. Keep the `audio` folder next to the HTML file. Speaker buttons play each Spanish line. |
 
 The web page has **A− / A+** type-size buttons and a jump-to-chapter menu. Audio is web-only (not in the PDF).

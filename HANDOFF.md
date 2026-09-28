@@ -10,7 +10,7 @@ Kitchen-table booklet for **English-speaking retirees living in Panama**. Goal: 
 
 | Format | File | Use |
 |---|---|---|
-| **PDF (print)** | `docs/essential-spanish.pdf` | Print or keep on a tablet. Letter size, ~49 pages. |
+| **PDF (print)** | `docs/essential-spanish.pdf` | Print or keep on a tablet. Letter size, ~50 pages. |
 | **Web (phone)** | `docs/index.html` + `docs/audio/` | Open in a browser. Keep the `audio` folder **next to** the HTML file. Speaker buttons play each Spanish line. |
 
 Do **not** ship `essential-spanish-grammar.pdf` — that old filename was retired when the title dropped “Grammar.”
