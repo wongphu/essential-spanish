@@ -10,7 +10,7 @@ This is not a grammar exam. It is a short, large-type guide with Panama examples
 
 | Format | File | Notes |
 |---|---|---|
-| **Print / tablet** | [`docs/essential-spanish.pdf`](docs/essential-spanish.pdf) | Letter size, about 37 pages. |
+| **Print / tablet** | [`docs/essential-spanish.pdf`](docs/essential-spanish.pdf) | Letter size, about 49 pages. |
 | **Phone (with audio)** | [`docs/index.html`](docs/index.html) + [`docs/audio/`](docs/audio/) | Open the HTML in a browser. Keep the `audio` folder next to the HTML file. Speaker buttons play each Spanish line. |
 
 The web page has **A− / A+** type-size buttons and a jump-to-chapter menu. Audio is web-only (not in the PDF).
@@ -41,7 +41,7 @@ To host the web booklet, upload `docs/index.html` and the `docs/audio/` folder t
 20. Phrasebook — clinic, pharmacy, restaurant, home repairs, taxi, 911
 21. Cheat sheets (photo page) and a pocket/wallet card
 
-Chapters 12 (commands), the cheat sheets, and the pocket page are the ones people actually carry.
+The commands chapter (Ch. 12), the cheat sheets, and the pocket page are the ones people actually carry.
 
 ## Rebuild
 
@@ -66,7 +66,7 @@ That regenerates:
 - macOS fonts: Georgia and Verdana under `/System/Library/Fonts/Supplemental/`
 - For audio: internet at rebuild time (Microsoft Edge neural TTS, voice **es-PA-RobertoNeural**)
 
-The first audio run takes several minutes (~480 clips). Later runs only build new hashes. Clip ids include the TTS model, voice, and rate, so changing any of those regenerates audio.
+The first audio run takes several minutes (~700 clips). Later runs only build new hashes. Clip ids include the TTS model, voice, and rate, so changing any of those regenerates audio.
 
 | Request | Where |
 |---|---|

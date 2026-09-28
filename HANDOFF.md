@@ -10,7 +10,7 @@ Kitchen-table booklet for **English-speaking retirees living in Panama**. Goal: 
 
 | Format | File | Use |
 |---|---|---|
-| **PDF (print)** | `docs/essential-spanish.pdf` | Print or keep on a tablet. Letter size, ~37 pages. |
+| **PDF (print)** | `docs/essential-spanish.pdf` | Print or keep on a tablet. Letter size, ~49 pages. |
 | **Web (phone)** | `docs/index.html` + `docs/audio/` | Open in a browser. Keep the `audio` folder **next to** the HTML file. Speaker buttons play each Spanish line. |
 
 Do **not** ship `essential-spanish-grammar.pdf` — that old filename was retired when the title dropped “Grammar.”
@@ -39,7 +39,7 @@ That regenerates:
 - macOS fonts: Georgia + Verdana under `/System/Library/Fonts/Supplemental/`
 - For audio: internet at rebuild time (Microsoft Edge neural TTS, voice **es-PA-RobertoNeural**)
 
-First audio run takes several minutes (~485 clips after slash-alternatives are split). Later runs only build new hashes.
+First audio run takes several minutes (~700 clips after slash-alternatives are split). Later runs only build new hashes.
 
 Edit **content** in `booklet_content.py`, then rebuild. Do not hand-edit `docs/index.html` or `docs/essential-spanish.pdf`; they are generated.
 

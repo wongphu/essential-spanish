@@ -550,7 +550,7 @@ add({
     "title": "I like it — start with me, not yo",
     "intro": (
         "English says “I like coffee.” Spanish says the coffee is pleasing to me. "
-        "You will want <es>Yo gusto.</es> That sentence is a wrong turn. "
+        "You will want to say “Yo gusto” (wrong). That sentence is a wrong turn. "
         "Start with <es>me</es>. The thing you like does the verb."
     ),
     "blocks": [
@@ -572,7 +572,7 @@ add({
         {"type": "p", "text": (
             "Park a dictionary-form verb after <es>gusta</es>, the same way you park a noun. "
             "This is how you say you like doing something. Never "
-            "<es>gustan bailar</es> — the activity is one thing."
+            "“gustan bailar” (wrong) — the activity is one thing."
         )},
         {"type": "pairs", "items": [
             ["Me gusta bailar.", "I like to dance."],
@@ -621,15 +621,15 @@ add({
         ]},
         {"type": "h2", "text": "I'd like — the polite shop sentence"},
         {"type": "p", "text": (
-            "Park <es>Me gustaría…</es> as a chunk, like <es>Quiero</es>. "
+            "Learn <es>Me gustaría…</es> as a chunk, like <es>Quiero</es>. "
             "It is softer, and it is what you say at a counter. You do not need "
             "the rest of that verb. This one line will do."
         )},
         {"type": "pairs", "items": [
             ["Me gustaría una mesa para dos.", "I would like a table for two."],
-            ["Me gustaría el menú.", "I would like the menu."],
+            ["Me gustaría ver el menú.", "I would like to see the menu."],
             ["Me gustaría pagar con tarjeta.", "I would like to pay by card."],
-            ["¿Le gustaría café?", "Would you like coffee?"],
+            ["¿Le gustaría un café?", "Would you like a coffee?"],
         ]},
         {"type": "h2", "text": "The same machine"},
         {"type": "p", "text": (
@@ -647,7 +647,7 @@ add({
             "not usually for people. For family, <es>Quiero mucho a mi familia</es> is safer."
         )},
         {"type": "tip", "title": "Don't say yo gusto", "text": (
-            "English wants “I like.” Spanish will not take <es>Yo gusto el café.</es> "
+            "English wants “I like.” Spanish will not take “Yo gusto el café” (wrong). "
             "If you freeze, start with <es>Me gusta…</es> and name the thing. "
             "Close enough is plenty."
         )},
@@ -1159,9 +1159,9 @@ add({
         {"type": "p", "text": (
             "Spanish forms often want two last names: father's, then mother's. "
             "If you only have one, put it in <es>primer apellido</es> and leave "
-            "<es>segundo apellido</es> blank — or write a dash. Do not drop your "
-            "middle name into an <es>apellido</es> box unless they ask for "
-            "<es>segundo nombre</es>."
+            "<es>segundo apellido</es> blank — or write a dash. Your middle "
+            "name goes in <es>segundo nombre</es>, not in "
+            "<es>segundo apellido</es>."
         )},
         {"type": "p", "text": (
             "On a form, U.S. nationality is <es>estadounidense</es>. "
@@ -1171,7 +1171,7 @@ add({
         {"type": "p", "text": (
             "Panama writes the day before the month. "
             "<es>15/03/1952</es> is 15 March 1952, not March 15. "
-            "If you write <es>3/15/1952</es>, the form will think you mean 3 March."
+            "If you write <es>3/5/1952</es> for March 5, the form reads it as 3 May."
         )},
         {"type": "pairs", "items": [
             ["el 15 de marzo de 1952", "March 15, 1952"],
@@ -1201,8 +1201,8 @@ add({
             ["fecha", "date"],
         ]},
         {"type": "p", "text": (
-            "<es>Firma</es> means sign it — your usual signature, not your name in print. "
-            "If the form says <es>letra de molde</es> or <es>letra imprenta</es>, print. "
+            "<es>Firma</es> is where you sign — your usual signature, not your name in print. "
+            "If the form says <es>letra de molde</es> or <es>letra de imprenta</es>, print. "
             "Don't use cursive in the other boxes."
         )},
         {"type": "panama", "title": "No cédula yet", "text": (
