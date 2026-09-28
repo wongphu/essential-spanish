@@ -109,7 +109,7 @@ add({
             "English vowels wander all over the place. Spanish vowels stay home. "
             "Learn these five and a lot of words suddenly look readable."
         )},
-        {"type": "table", "headers": ["Letter", "Say it like", "Example"], "rows": [
+        {"type": "table", "headers": ["Letter", "Say it like", "Example"], "audio_cols": [2], "rows": [
             ["a", "ah in father", "casa, Panamá"],
             ["e", "eh in bet (clear, not “ay”)", "café, mesa"],
             ["i", "ee in machine", "sí, vino"],
@@ -117,8 +117,8 @@ add({
             ["u", "oo in moon", "tú, uno"],
         ]},
         {"type": "h2", "text": "The consonants that surprise English speakers"},
-        {"type": "table", "headers": ["Letter", "What to do", "Example"], "rows": [
-            ["h", "Always silent.", "hola = OH-lah"],
+        {"type": "table", "headers": ["Letter", "What to do", "Example"], "audio_cols": [2], "rows": [
+            ["h", "Always silent.", "hola (OH-lah)"],
             ["j", "A strong h, from the throat.", "José, jardín"],
             ["ll / y", "In Panama, both sound like y in yes.", "calle, playa"],
             ["ñ", "ny, as in canyon.", "mañana, señor"],
@@ -126,7 +126,7 @@ add({
             ["rr", "A trill. Do your best. People will still understand you.", "perro, arroz"],
             ["v / b", "Almost the same sound. Don't stress the difference.", "vaca, banco"],
             ["qu", "A k sound. The u is silent.", "qué, quiero"],
-            ["c + e/i, or z", "An s sound in Panama (not the Spanish lisp).", "cielo, cerveza"],
+            ["c + e/i, or z", "An s sound in Panama (not Spain's th sound).", "cielo, cerveza"],
             ["g + e/i", "Same raspy h as j.", "gente, giro"],
         ]},
         {"type": "p", "text": (
@@ -255,7 +255,7 @@ add({
     "blocks": [
         {"type": "pairs", "items": [
             ["una casa grande", "a big house"],
-            ["un café bueno", "a good coffee"],
+            ["un café caliente", "a hot coffee"],
             ["las islas bonitas", "the pretty islands"],
             ["el banco está cerrado", "the bank is closed"],
         ]},
@@ -367,7 +367,7 @@ add({
             ["Soy jubilada.", "I'm retired. (a woman — that's who you are)"],
             ["Ella es médica.", "She is a doctor."],
             ["Somos vecinos.", "We're neighbors."],
-            ["Es el martes.", "It's Tuesday."],
+            ["Hoy es martes.", "Today is Tuesday."],
             ["Son las tres.", "It's three o'clock."],
             ["El anillo es de oro.", "The ring is made of gold."],
             ["¿Quién es? — Es el plomero.", "Who is it? — It's the plumber."],
@@ -513,7 +513,7 @@ add({
         {"type": "p", "text": (
             "The <es>tú</es> forms (if a friend is using tú with you) usually look like "
             "the usted form plus an <es>s</es>: <es>vas, tienes, puedes, quieres</es>. "
-            "Exceptions you already know: <es>eres, estás</es>."
+            "The one exception here: <es>eres</es>."
         )},
         {"type": "h2", "text": "Tener is bigger than “to have”"},
         {"type": "p", "text": (
@@ -729,7 +729,7 @@ add({
     "title": "Yesterday, without the headache",
     "intro": (
         "Spanish has two everyday past tenses. English has one. That is why this "
-        "chapter lasts for years. You need a snapshot version: one past for finished "
+        "chapter lasts for years. You need the short version: one past for finished "
         "events, one past for background and “used to.” The English trap is using the "
         "snapshot past for both."
     ),
@@ -859,7 +859,7 @@ add({
     "title": "Por and para — the short version",
     "intro": (
         "Both can translate as “for,” which is unhelpful. You do not need every textbook "
-        "list. You need two jobs for <es>para</es> and three jobs for <es>por</es>."
+        "list. You need four jobs for <es>para</es> and four for <es>por</es>."
     ),
     "blocks": [
         {"type": "h2", "text": "Para — purpose, destination, deadline, recipient"},
@@ -915,7 +915,6 @@ add({
             ["entre", "between"],
             ["a la derecha", "to the right"],
             ["a la izquierda", "to the left"],
-            ["todo recto", "straight ahead"],
             ["derecho", "straight ahead"],
         ]},
         {"type": "p", "text": (
@@ -928,13 +927,13 @@ add({
             ["Vivo cerca de la playa.", "I live near the beach."],
             ["Está a dos cuadras.", "It's two blocks away."],
             ["Gire a la derecha.", "Turn right."],
-            ["Venimos de la capital.", "We came from Panama City."],
+            ["Vinimos de la capital.", "We came from Panama City."],
         ]},
         {"type": "h2", "text": "The personal “a” — when the object is a person"},
         {"type": "p", "text": (
             "English speakers drop this constantly. It is a tiny <es>a</es> before a person "
             "(or a pet you treat like a person). Things do not get it. People will still "
-            "understand you without it. Copy it when you can and you will sound less like a textbook in reverse."
+            "understand you without it. Copy it when you can and you will sound more natural."
         )},
         {"type": "pairs", "items": [
             ["Busco a mi esposa.", "I'm looking for my wife."],
@@ -992,8 +991,8 @@ add({
             ["¿Aceptan tarjeta?", "Do you take cards?"],
         ]},
         {"type": "panama", "title": "Dollars, balboas, and the caja", "text": (
-            "Paper money is the U.S. dollar. Local coins are often called "
-            "<es>balboas</es>, but they are worth the same as U.S. coins. "
+            "Paper money is the U.S. dollar. Coins can be U.S. or Panama's own "
+            "<es>balboas</es>, which are worth exactly the same. "
             "<es>La caja</es> is the cashier. <es>La cola</es> is the line. "
             "Tipping is modest — ten percent at sit-down restaurants is a kind default "
             "if service is not already included."
@@ -1006,6 +1005,7 @@ add({
             ["Son las tres y media.", "It's 3:30."],
             ["Son las cuatro y cuarto.", "It's 4:15."],
             ["Son las diez menos diez.", "It's 9:50. (ten to ten)"],
+            ["Son diez para las diez.", "It's 9:50. (how Panama often says it)"],
             ["a las nueve de la mañana", "at 9:00 a.m."],
             ["a las siete de la noche", "at 7:00 p.m."],
         ]},
@@ -1068,7 +1068,7 @@ add({
         {"type": "ul", "items": [
             "<es>-ito / -ita</es> makes things smaller or kinder: <es>momentito, cafecito, abuelita</es>. It is friendly, not baby talk.",
             "<es>lo</es> and <es>la</es> often mean “it” or “him/her,” and they sit in front of the verb: <es>¿Lo vio?</es> Did you see it? <es>La tengo.</es> I have it. If that throws you, just repeat the noun. English speakers trip here more than on verbs — recognition first is enough.",
-            "You'll hear <es>se lo</es> a lot: <es>Se lo dije.</es> I told him/her it. You do not have to build this yet. Just know it is not a new verb.",
+            "You'll hear <es>se lo</es> a lot: <es>Se lo dije.</es> I told him/her. You do not have to build this yet. Just know it is not a new verb.",
             "<es>se</es> also shows up on signs: <es>Se vende. Se alquila. Se habla español.</es> For sale. For rent. Spanish spoken here.",
             "<es>Me llamo</es> is technically a reflexive verb. So is <es>Me siento mal</es> (I feel bad). Learn them as phrases.",
         ]},
@@ -1092,7 +1092,7 @@ add({
             ["pelao", "kid / young person (a boy)"],
             ["pelaíta", "kid / young person (a girl)"],
             ["la plata", "money"],
-            ["un chance", "a ride (¿Me da un chance?)"],
+            ["un bote", "a ride (¿Me da un bote?)"],
             ["la bomba", "the gas station (yes, also “bomb” — context will save you)"],
             ["el abanico", "the fan"],
             ["la chitra", "no-see-ums, the tiny biting bugs"],
@@ -1102,7 +1102,7 @@ add({
             ["farmacia de turno", "the pharmacy on duty that night"],
             ["se fue la luz", "the power went out"],
             ["se fue el agua", "the water went out"],
-            ["¡Juega viva!", "stay sharp / watch out (friendly warning)"],
+            ["¡Juega vivo!", "be street-smart / don't get taken (also: someone working an angle)"],
         ]},
         {"type": "ul", "items": [
             "There is no <es>vos</es> here (that's more Costa Rica, Nicaragua, Argentina). Stick with <es>tú</es> and <es>usted</es>.",
@@ -1330,11 +1330,10 @@ add({
             ["Agua sin gas.", "Still water."],
             ["Agua con gas.", "Sparkling water."],
             ["Sin hielo, por favor.", "No ice, please."],
-            ["No picante, por favor.", "Not spicy, please."],
+            ["Sin picante, por favor.", "Not spicy, please."],
             ["Está delicioso.", "It's delicious."],
             ["Para llevar.", "To go."],
             ["La cuenta, por favor.", "The bill, please."],
-            ["¿Propina incluida?", "Is the tip included?"],
             ["¿Está incluida la propina?", "Is the tip included?"],
         ]},
         {"type": "h2", "text": "At home with a plumber, electrician, or gardener"},
@@ -1354,11 +1353,11 @@ add({
         {"type": "h2", "text": "Getting around"},
         {"type": "phrases", "columns": ["Spanish", "English"], "rows": [
             ["¿Está libre?", "Are you free? (taxi)"],
-            ["Al Hospital Paitilla, por favor.", "To Paitilla Hospital, please."],
+            ["Al Centro Médico Paitilla, por favor.", "To Paitilla Medical Center, please."],
             ["¿Cuánto es hasta…?", "How much is it to…?"],
             ["Aquí está bien. Gracias.", "Here is fine. Thank you."],
             ["¿Dónde está la parada del bus?", "Where is the bus stop?"],
-            ["¿Dónde está la parada del Metro?", "Where is the Metro stop?"],
+            ["¿Dónde está la estación del Metro?", "Where is the Metro station?"],
             ["Un taxi, por favor.", "A taxi, please."],
         ]},
         {"type": "h2", "text": "Neighbors and small talk"},
